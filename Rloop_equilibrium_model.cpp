@@ -2,10 +2,10 @@
 // Created by Robert Stolz on 6/27/17.
 //
 
-#include "rloop_equilibrium_model.h"
+#include "Rloop_equilibrium_model.h"
 #include "biophysics.h"
 //constructors
-rloop_equilibrium_model::rloop_equilibrium_model() {
+Rloop_equilibrium_model::Rloop_equilibrium_model() {
 
     N = 1500; //1500bp is the experimentally determined length of the (-) sc domain after the transcription machinery
     A = 1/10.4; // turns/bp
@@ -37,79 +37,79 @@ rloop_equilibrium_model::rloop_equilibrium_model() {
 }
 
 //getters
-int rloop_equilibrium_model::getMinimum_loop_length() const {
+int Rloop_equilibrium_model::getMinimum_loop_length() const {
     return minimum_loop_length;
 }
 
-int rloop_equilibrium_model::getN() const {
+int Rloop_equilibrium_model::getN() const {
     return N;
 }
 
-double rloop_equilibrium_model::getA() const {
+double Rloop_equilibrium_model::getA() const {
     return A;
 }
 
-double rloop_equilibrium_model::getC() const {
+double Rloop_equilibrium_model::getC() const {
     return C;
 }
 
-double rloop_equilibrium_model::getK() const {
+double Rloop_equilibrium_model::getK() const {
     return k;
 }
 
-double rloop_equilibrium_model::geta() const {
+double Rloop_equilibrium_model::geta() const {
     return a;
 }
 
-double rloop_equilibrium_model::getSigma() const {
+double Rloop_equilibrium_model::getSigma() const {
     return sigma;
 }
 
-double rloop_equilibrium_model::getAlpha() const {
+double Rloop_equilibrium_model::getAlpha() const {
     return alpha;
 }
 
-void rloop_equilibrium_model::setMinimum_loop_length(int minimum_loop_length) {
-    rloop_equilibrium_model::minimum_loop_length = minimum_loop_length;
+void Rloop_equilibrium_model::setMinimum_loop_length(int minimum_loop_length) {
+    Rloop_equilibrium_model::minimum_loop_length = minimum_loop_length;
 }
 
-void rloop_equilibrium_model::setN(int N) {
-    rloop_equilibrium_model::N = N;
+void Rloop_equilibrium_model::setN(int N) {
+    Rloop_equilibrium_model::N = N;
 }
 
-void rloop_equilibrium_model::setA(double A) {
-    rloop_equilibrium_model::A = A;
+void Rloop_equilibrium_model::setA(double A) {
+    Rloop_equilibrium_model::A = A;
 }
 
-void rloop_equilibrium_model::setC(double C) {
-    rloop_equilibrium_model::C = C;
+void Rloop_equilibrium_model::setC(double C) {
+    Rloop_equilibrium_model::C = C;
 }
 
-void rloop_equilibrium_model::setK(double k) {
-    rloop_equilibrium_model::k = k;
+void Rloop_equilibrium_model::setK(double k) {
+    Rloop_equilibrium_model::k = k;
 }
 
-void rloop_equilibrium_model::seta(double a) {
-    rloop_equilibrium_model::a = a;
+void Rloop_equilibrium_model::seta(double a) {
+    Rloop_equilibrium_model::a = a;
 }
 
-void rloop_equilibrium_model::setSigma(double sigma) {
-    rloop_equilibrium_model::sigma = sigma;
+void Rloop_equilibrium_model::setSigma(double sigma) {
+    Rloop_equilibrium_model::sigma = sigma;
 }
 
-void rloop_equilibrium_model::setAlpha(double alpha) {
-    rloop_equilibrium_model::alpha = alpha;
+void Rloop_equilibrium_model::setAlpha(double alpha) {
+    Rloop_equilibrium_model::alpha = alpha;
 }
 
-double rloop_equilibrium_model::getT() const {
+double Rloop_equilibrium_model::getT() const {
     return T;
 }
 
-void rloop_equilibrium_model::setT(double T) {
-    rloop_equilibrium_model::T = T;
+void Rloop_equilibrium_model::setT(double T) {
+    Rloop_equilibrium_model::T = T;
 }
 
-double rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second){
+double Rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second){
     char b_0 = *first;
     char b_1 = *second;
     double I_0;
@@ -119,7 +119,7 @@ double rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& f
     return I_0;
 }
 
-double rloop_equilibrium_model::compute_bps_interval(const char &first, const char &second){
+double Rloop_equilibrium_model::compute_bps_interval(const char &first, const char &second){
     if (first == 'C'){ //C
         if (second == 'C') //CC
             return rGG_dCC;
@@ -162,7 +162,7 @@ double rloop_equilibrium_model::compute_bps_interval(const char &first, const ch
     }
 }
 
-void rloop_equilibrium_model::compute_structure(const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
+void Rloop_equilibrium_model::compute_structure(const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
     std::vector<char>::iterator b_0;
     //get boundaries of the sequence for this structure
     long int m = std::distance(start,stop);
@@ -175,6 +175,6 @@ void rloop_equilibrium_model::compute_structure(const std::vector<char>::iterato
     }
 }
 
-long double rloop_equilibrium_model::ground_state_factor(){
+long double Rloop_equilibrium_model::ground_state_factor(){
     return compute_boltzmann_factor(((k*pow(alpha, 2)) / 2) - a,T);
 }

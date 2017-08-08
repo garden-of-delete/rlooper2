@@ -11,7 +11,14 @@ Simulation::~Simulation(){
     for(std::vector<Gene*>::iterator it = genes.begin(); std::distance(genes.begin(),it) < genes.size(); ++it){
         delete *it; //need to test this destructor
     }
+}
 
+void Simulation::set_infile(string infilename){
+    infile.open(infilename, ios::in);
+}
+
+void Simulation::set_outfile(string outfilename){
+    outfile.open(outfilename, ios::out);
 }
 
 void Simulation::write_wigfile(Gene& gene){
@@ -53,16 +60,18 @@ void Simulation::write_wigfile(Gene& gene){
 
 void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
     //initialize variables
-    ifstream fastafile("sequences/mouse_airn.txt", ios::in);
+    if (!infile.is_open()){
+        //throw exception
+    }
     bool eof = false;
-    rloop_equilibrium_model modelA;
+    Rloop_equilibrium_model modelA;
 
     //do while !eof
     while(eof == false){
         //allocate new gene
         Gene* this_gene = new Gene();
         //read gene
-        eof = this_gene->read_gene(fastafile);
+        eof = this_gene->read_gene(infile);
         //compute structures using models
         this_gene->complement_sequence();
         this_gene->compute_structures(modelA);

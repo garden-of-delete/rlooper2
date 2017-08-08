@@ -3,7 +3,7 @@
 //
 
 #ifndef RLOOPER2_SIMULATION_H
-#include "rloop_equilibrium_model.h"
+#include "Rloop_equilibrium_model.h"
 #import "exception_handling.h"
 #import <sstream>
 
@@ -11,7 +11,8 @@ class Simulation{
 private:
     std::vector<Model> models;
     std::vector<Gene*> genes;
-
+    ifstream infile;
+    ofstream outfile;
     //member functions
     void write_wigfile(Gene& gene);
     //simulation protocols
@@ -24,6 +25,9 @@ private:
 public:
     Simulation();
     ~Simulation();
+    //getters and setters
+    void set_infile(string infilename);
+    void set_outfile(string outfilename);
 
     /**
      * Tells the software suites what simulations to run in what order. Functions as the main method.

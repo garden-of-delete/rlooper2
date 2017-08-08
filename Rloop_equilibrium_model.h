@@ -8,7 +8,7 @@
 #ifndef RLOOPER2_RLOOP_EQUILIBRIUM_MODEL_H
 #define RLOOPER2_RLOOP_EQUILIBRIUM_MODEL_H
 
-class rloop_equilibrium_model: public Model{
+class Rloop_equilibrium_model: public Model{
 protected:
     //model parameters
     int minimum_loop_length; //possibly not relevant in the future
@@ -43,7 +43,7 @@ protected:
 
 public:
     //constructors
-    rloop_equilibrium_model();
+    Rloop_equilibrium_model();
     //need a special constructor that lets your specify some or all of these parameters
 
     //getters
