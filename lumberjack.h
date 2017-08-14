@@ -5,9 +5,27 @@
 #ifndef RLOOPER2_LUMBERJACK_H
 #define RLOOPER2_LUMBERJACK_H
 
+#include <string>
+#include <time.h>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
 
-class lumberjack {
+using namespace std;
 
+//logging framework
+class Lumberjack {
+private:
+    int logging_level;
+    ofstream logfile;
+    string get_time();
+
+public:
+    Lumberjack(int _logging_level);
+    ~Lumberjack();
+    void log_error(string message);
+    void log_status(string message);
+    void log_debug(string message);
 };
 
 
