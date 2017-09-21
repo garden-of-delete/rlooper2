@@ -75,10 +75,12 @@ void Rloop_equilibrium_model::setMinimum_loop_length(int minimum_loop_length) {
 
 void Rloop_equilibrium_model::setN(int N) {
     Rloop_equilibrium_model::N = N;
+    setAlpha(N*sigma*A);
 }
 
 void Rloop_equilibrium_model::setA(double A) {
     Rloop_equilibrium_model::A = A;
+    setAlpha(N*sigma*A);
 }
 
 void Rloop_equilibrium_model::setC(double C) {
@@ -95,6 +97,7 @@ void Rloop_equilibrium_model::seta(double a) {
 
 void Rloop_equilibrium_model::setSigma(double sigma) {
     Rloop_equilibrium_model::sigma = sigma;
+    setAlpha(N*sigma*A);
 }
 
 void Rloop_equilibrium_model::setAlpha(double alpha) {
@@ -169,7 +172,7 @@ void Rloop_equilibrium_model::compute_structure(const std::vector<char>::iterato
     //compute the superhelicity term
     structure.free_energy = (2 * pow(M_PI, 2)*C*k*pow((alpha + m*A), 2)) / (4 * pow(M_PI, 2) *C + k*m);
     //compute the base-pairing energy in a loop over the sequence in the boundary
-    for (b_0=start; b_0 < stop-1; b_0++){
+    for (b_0=start; b_0 < stop; b_0++){
         structure.free_energy += step_forward_bps(b_0,b_0+1);
         structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
     }

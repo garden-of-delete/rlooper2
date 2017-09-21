@@ -7,7 +7,7 @@
 Lumberjack::Lumberjack(int _logging_level){
     logging_level = _logging_level;
     stringstream ss;
-    ss << get_time() << ' _log.txt';
+    ss << get_time() << "_log.txt";
     logfile.open(ss.str(), ios::out);
 }
 

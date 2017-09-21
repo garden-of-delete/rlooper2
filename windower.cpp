@@ -12,15 +12,15 @@ Windower::Windower(std::vector<char> &target_sequence){
     current_stop = current_start + min_window_size-1;
 }
 
-void Windower::set_sequence(std::vector<char>& target_sequence){ //not working
+void Windower::set_sequence(std::vector<char>& target_sequence){ //not working?
     current_sequence = &target_sequence;
     current_start = target_sequence.begin();
-    current_stop = current_start + min_window_size-1;
+    current_stop = current_start + min_window_size - 2;
 }
 
 bool Windower::has_next_window(){
     //if the last window has been reached
-    if (current_start == current_sequence->end()-min_window_size && current_stop == current_sequence->end()){ //untested rs 7.11.17
+    if (current_start == current_stop-min_window_size+1 && current_stop == current_sequence->end()-1){ //untested rs 7.11.17
         return false;
     }
     else
@@ -31,12 +31,12 @@ void Windower::next_window_from_all_windows(std::vector<char>::iterator& start, 
     //if (!has_next_window()){ //safety check to make sure the next window exists
     //    throw WindowerException(); //throw exception?
     //}
-    if (stop < current_sequence->end()){
+    if (stop < current_sequence->end()-1){
         ++current_stop;
     }
-    else if (start < current_sequence->end()-min_window_size){
+    else{ //if (start < current_sequence->end()-min_window_size){
         ++current_start;
-        current_stop = current_start + min_window_size;
+        current_stop = current_start + min_window_size-1;
     }
     start = current_start;
     stop = current_stop;
@@ -53,5 +53,15 @@ long int Windower::get_current_stop_offset(){
 
 void Windower::reset_window(){
     current_start = current_sequence->begin();
-    current_stop = current_sequence->begin()+min_window_size-1;
+    current_stop = current_sequence->begin()+min_window_size - 2;
+}
+
+void Windower::print_current_window(){
+    std::vector<char>::iterator it;
+    it = current_start;
+    while (it < current_stop){
+        std::cout << *it;
+        ++it;
+    }
+    std::cout << '\n';
 }

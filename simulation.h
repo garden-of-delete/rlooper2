@@ -16,14 +16,24 @@ private:
     //member functions
     void write_wigfile(Gene& gene);
     //simulation protocols
+
     /**
-     * Simulation protocol and reasoning goes here.
+     * Ensemble analysis on a set of genes. Further description needed.
      */
     void simulation_A();
 
+    /**
+     * Computes P(R-Loop is on the sequence at equilibrium for a given supercoiling level)
+     */
+    void simulation_B(float superhelicity);
+
+    /**
+    * A test environmnet for debugging purposes
+    */
+    void sandbox();
 
 public:
-    Simulation();
+    Simulation(int argc, char* argv[]);
     ~Simulation();
     //getters and setters
     void set_infile(string infilename);

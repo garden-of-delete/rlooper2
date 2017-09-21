@@ -82,8 +82,7 @@ const vector<char, allocator<char>> &Gene::getSequence() const {
     windower.set_sequence(Gene::sequence);
 }*/
 
-const vector<vector<Structure, allocator<Structure>> *, allocator<vector<Structure, allocator<Structure>> *>> &
-Gene::getStructures() const {
+vector<vector<Structure>*> Gene::getStructures(){
     return structures;
 }
 
@@ -159,7 +158,7 @@ bool Gene::read_gene(ifstream& fastafile) { //need to test
         }
             //else the charicter is unrecognized
         else {
-            throw InvalidSequenceDataException();
+            throw InvalidSequenceDataException(c);
         }
     }
     return true;
@@ -167,12 +166,21 @@ bool Gene::read_gene(ifstream& fastafile) { //need to test
     //throw InvalidSequenceDataException();
 }
 
+void Gene::print_gene(){
+    std::cout << header << std::endl;
+    for (std::vector<char>::iterator it = sequence.begin(); it<sequence.end(); ++it){
+        cout << *it;
+    }
+    std::cout << std::endl;
+}
+
 void Gene::compute_structures(Model &model){
     std::vector<Structure>* these_structures = new vector<Structure>;
-    std::vector<char>::iterator start,stop;
     if (sequence.size() == 0){
         //throw exception
     }
+    //initializing the iterators ensures that the intial comparison in next_window_from_all_windows is not problematic
+    std::vector<char>::iterator start = sequence.begin(),stop=sequence.begin()+1;
     windower.reset_window();
     while (windower.has_next_window()){
         windower.next_window_from_all_windows(start,stop); //do I want the model to be able to decide it needs a different windowing scheme?
@@ -187,6 +195,7 @@ void Gene::compute_structures(Model &model){
         //push the now computed structure onto these_structures
         these_structures->push_back(temp); //need to make sure the default copy constructor is working properly
     }
+    //windower.print_current_window(); //DEBUG
     structures.push_back(these_structures);
 }
 

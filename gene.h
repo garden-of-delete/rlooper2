@@ -43,8 +43,7 @@ public:
     void setPosition(const Loci &position);
     const vector<char, allocator<char>> &getSequence() const;
     //void setSequence(const vector<char, allocator<char>> &sequence);
-    const vector<vector<Structure, allocator<Structure>> *, allocator<vector<Structure, allocator<Structure>> *>> &
-    getStructures() const;
+    vector<vector<Structure>*> getStructures();
     bool isContains_peaks() const;
     void setContains_peaks(bool contains_peaks);
     const vector<Peak, allocator<Peak>> &getDripseq_peaks() const;
@@ -56,6 +55,11 @@ public:
      * @return              returns a boolean indicating if the gene was teh last FASTA record in the file.
      */
     bool read_gene(std::ifstream& fastafile);
+
+    /**
+     * useful for debugging. Prints the header and the sequence stored in the current gene.
+     */
+    void print_gene();
 
     /**
      * Takes a model and uses it to allocate and populate a vector<Structure> of structures. Pushes the result to structures.

@@ -6,10 +6,11 @@
 #define RLOOPER2_WINDOWER_H
 
 #include <vector>
+#include <iostream>
 
 class Windower {
 private:
-    int min_window_size;
+    int min_window_size; //must be at least 2
     std::vector<char>* current_sequence;
     std::vector<char>::iterator current_start, current_stop;
 public:
@@ -45,6 +46,13 @@ public:
      * resets the current_start and current_stop iterators to their initial position on current_sequence.
      */
     void reset_window();
+
+    /**
+     * A function primarily for debugging. Allows the windower object to print the contents of the current window to stdout.
+     *
+     */
+    void print_current_window();
+
 };
 
 

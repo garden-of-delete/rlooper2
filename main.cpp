@@ -3,9 +3,9 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    Simulation sim;
+    Simulation sim(argc, argv);
     sim.run_simulations();
     return 0;
 }

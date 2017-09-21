@@ -1,13 +1,14 @@
 //
 // Created by Robert Stolz on 6/28/17.
 //
+#ifndef RLOOPER2_EXCEPTION_HANDLING_H
+#define RLOOPER2_EXCEPTION_HANDLING_H
+
 #include <exception>
 #include <iostream>
 #include <string>
+#include <sstream>
 using namespace std;
-
-#ifndef RLOOPER2_EXCEPTION_HANDLING_H
-#define RLOOPER2_EXCEPTION_HANDLING_H
 
 class ModelException1: public exception{
     virtual const char* what() const throw()
@@ -35,9 +36,19 @@ public:
 };
 
 class InvalidSequenceDataException : public exception{
+private:
+    string triggering_char;
+    string message = "Fatal Exception: The following character in the input sequence is unrecognized: ";
+public:
+    InvalidSequenceDataException(char c){
+        stringstream ss;
+        ss << c;
+        ss >> triggering_char;
+    };
+
     virtual const char* what() const throw()
     {
-        return "Fatal Exception: There is an unrecognized or out of place charicter in the input sequence.";
+        return (message + triggering_char).c_str();
     }
 };
 
