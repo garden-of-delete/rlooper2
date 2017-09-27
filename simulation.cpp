@@ -71,7 +71,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     }
     bool eof = false;
     Rloop_equilibrium_model modelA;
-    modelA.setSigma(0.00);
+    modelA.setSigma(0.7);
 
     //do while !eof
     while(eof == false){
@@ -117,8 +117,8 @@ void Simulation::simulation_B(float superehelcity){
     if (!genes.size()){
         this_gene = new Gene();
         this_gene->read_gene(infile);
-        this_gene->complement_sequence();
-        //this_gene->invert_sequence();
+        //this_gene->complement_sequence();
+        this_gene->invert_sequence();
         genes.push_back(this_gene);
     }
     else{
@@ -142,7 +142,7 @@ void Simulation::simulation_B(float superehelcity){
     //determine P(R-Loop) as 1-P(ground state)
     p_rloop = 1 - (ground_state_factor/partition_function);
     //display result
-    cout << "At superhelicity " << superehelcity << ", P(R-Loop)=" << p_rloop << endl;
+    outfile << superehelcity << ' ' << p_rloop << endl;
 }
 
 void Simulation::sandbox(){ //DEBUG environment
@@ -196,7 +196,7 @@ void Simulation::sandbox(){ //DEBUG environment
 }
 
 void Simulation::run_simulations(){ //main method
-    simulation_A();
+    //simulation_A();
 
     for (float superhelicity=-0.14; superhelicity <= 0.141; superhelicity += 0.01){
         simulation_B(superhelicity);

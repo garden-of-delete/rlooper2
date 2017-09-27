@@ -4,7 +4,7 @@
 
 #include "windower.h"
 
-Windower::Windower(): min_window_size(2) {};
+Windower::Windower(): min_window_size(20) {};
 
 Windower::Windower(std::vector<char> &target_sequence){
     current_sequence = &target_sequence;
