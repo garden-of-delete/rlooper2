@@ -117,8 +117,8 @@ void Simulation::simulation_B(float superehelcity){
     if (!genes.size()){
         this_gene = new Gene();
         this_gene->read_gene(infile);
-        //this_gene->complement_sequence();
-        this_gene->invert_sequence();
+        this_gene->complement_sequence();
+        //this_gene->invert_sequence();
         genes.push_back(this_gene);
     }
     else{
@@ -145,54 +145,8 @@ void Simulation::simulation_B(float superehelcity){
     outfile << superehelcity << ' ' << p_rloop << endl;
 }
 
-void Simulation::sandbox(){ //DEBUG environment
+void Simulation::sandbox(){ //test/debug environment
 
-    /*Windower test_windower;
-    vector<char> test_vector;
-    test_vector.push_back('A');
-    test_vector.push_back('B');
-    test_vector.push_back('C');
-    test_vector.push_back('D');
-    test_vector.push_back('E');
-    test_vector.push_back('F');
-    test_vector.push_back('G');
-
-    test_windower.set_sequence(test_vector);
-    vector<char>::iterator start, stop;
-    int count = 0;
-    while(test_windower.has_next_window()){
-        test_windower.next_window_from_all_windows(start,stop);
-        cout << *start << ' ' << *stop << endl;
-        count++;
-    }
-    cout << count << endl;*/
-
-    Rloop_equilibrium_model modelA;
-    Gene this_gene;
-    this_gene.read_gene(infile);
-    //this_gene.complement_sequence();
-    this_gene.print_gene();
-    this_gene.compute_structures(modelA);
-    modelA.setAlpha(0.);
-    this_gene.compute_structures(modelA);
-    modelA.setAlpha(0.7);
-    this_gene.compute_structures(modelA);
-    cout << this_gene.getStructures()[0]->size() << endl;
-    cout << this_gene.getStructures()[1]->size() << endl;
-    cout << this_gene.getStructures()[2]->size() << endl << endl;
-
-    Gene second_gene;
-    second_gene.read_gene(infile);
-    second_gene.complement_sequence();
-    modelA.setAlpha(-0.7);
-    second_gene.compute_structures(modelA);
-    modelA.setAlpha(0.);
-    second_gene.compute_structures(modelA);
-    modelA.setAlpha(0.7);
-    second_gene.compute_structures(modelA);
-    cout << second_gene.getStructures()[0]->size() << endl;
-    cout << second_gene.getStructures()[1]->size() << endl;
-    cout << second_gene.getStructures()[2]->size() << endl;
 }
 
 void Simulation::run_simulations(){ //main method
