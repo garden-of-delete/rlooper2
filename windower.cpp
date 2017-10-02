@@ -12,6 +12,17 @@ Windower::Windower(std::vector<char> &target_sequence){
     current_stop = current_start + min_window_size-1;
 }
 
+int Windower::get_min_window_size(){
+    return min_window_size;
+}
+
+void Windower::set_min_window_size(int size){
+    if (size < 2){
+        //throw exception
+    }
+    min_window_size = size;
+}
+
 void Windower::set_sequence(std::vector<char>& target_sequence){ //not working?
     current_sequence = &target_sequence;
     current_start = target_sequence.begin();

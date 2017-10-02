@@ -30,6 +30,10 @@ void Simulation::set_minlength(int Minlength){
     minlength = Minlength;
 }
 
+std::vector<Model>* Simulation::get_models(){
+    return &models;
+}
+
 void Simulation::write_wigfile(Gene& gene){
 
     //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
@@ -64,19 +68,18 @@ void Simulation::write_wigfile(Gene& gene){
     outfile << ss.rdbuf();
 }
 
-void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
+void Simulation::simulation_A(Rloop_equilibrium_model modelA){ //some of this code might be migrated into new objects and functions in the future
     //initialize variables
     if (!infile.is_open()){
         //throw exception
     }
     bool eof = false;
-    Rloop_equilibrium_model modelA;
-    modelA.setSigma(0.7);
 
     //do while !eof
     while(eof == false){
         //allocate new gene
         Gene* this_gene = new Gene();
+        this_gene->windower.set_min_window_size(minlength);
         //read gene
         eof = this_gene->read_gene(infile);
         //compute structures using models
@@ -98,7 +101,8 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             it->probability = it->boltzmann_factor/partition_function;
             sanity_check += it->boltzmann_factor/partition_function;
         }
-        cout << "Partition function sum: " << sanity_check << endl;
+        sanity_check += modelA.ground_state_factor()/partition_function;
+        cout << "Partition function sum: " << sanity_check << endl; //replace with an exception
         //compute p(base-pair i is in an R-Loop structure) and write to file
         write_wigfile(*this_gene);
 
@@ -107,7 +111,6 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         //store the gene in the genes vector
         genes.push_back(this_gene);
     }
-
 }
 
 //computes P(R-Loop) for the provided supercoiling value

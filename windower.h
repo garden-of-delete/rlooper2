@@ -18,6 +18,10 @@ public:
     Windower();
     Windower(std::vector<char> &sequence);
 
+    int get_min_window_size();
+
+    void set_min_window_size(int size);
+
     void set_sequence(std::vector<char>& sequence);
 
     /**

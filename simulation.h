@@ -35,12 +35,13 @@ public:
     void set_infile(string infilename);
     void set_outfile(string outfilename);
     void set_minlength(int Minlength);
+    std::vector<Model>* get_models();
 
     //simulation protocols
     /**
      * Ensemble analysis on a set of genes. Further description needed.
      */
-    void simulation_A();
+    void simulation_A(Rloop_equilibrium_model modelA);
 
     /**
      * Computes P(R-Loop is on the sequence) for a given superhelicity level
