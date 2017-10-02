@@ -13,19 +13,14 @@ private:
     std::vector<Gene*> genes;
     ifstream infile;
     ofstream outfile;
+    int minlength; //a minimum loop length to be applied simulation-wide.
     //member functions
+
+    /**
+     *
+     * @param gene
+     */
     void write_wigfile(Gene& gene);
-    //simulation protocols
-
-    /**
-     * Ensemble analysis on a set of genes. Further description needed.
-     */
-    void simulation_A();
-
-    /**
-     * Computes P(R-Loop is on the sequence at equilibrium for a given supercoiling level)
-     */
-    void simulation_B(float superhelicity);
 
     /**
     * A test environmnet for debugging purposes
@@ -33,17 +28,24 @@ private:
     void sandbox();
 
 public:
+    Simulation();
     Simulation(int argc, char* argv[]);
     ~Simulation();
     //getters and setters
     void set_infile(string infilename);
     void set_outfile(string outfilename);
+    void set_minlength(int Minlength);
+
+    //simulation protocols
+    /**
+     * Ensemble analysis on a set of genes. Further description needed.
+     */
+    void simulation_A();
 
     /**
-     * Tells the software suites what simulations to run in what order. Functions as the main method.
+     * Computes P(R-Loop is on the sequence) for a given superhelicity level
      */
-    void run_simulations(); //main method for the software suite.
-
+    void simulation_B(float superhelicity);
 };
 
 #define RLOOPER2_SIMULATION_H

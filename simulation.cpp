@@ -3,14 +3,13 @@
 //
 #import "simulation.h"
 
-Simulation::Simulation(int argc, char* argv[]){
-    //read arguments
-    if (argc < 2){
-        //throw invalid command line arguments exception
-    }
-    //check that the required arguments for simulationA (ensemble analysis) are provided, otherwise throw exception
-    set_infile(argv[1]);
-    set_outfile(argv[2]);
+void initialize_models(char* model){
+
+}
+
+Simulation::Simulation(){
+    //default constructor
+    minlength = 20; //default minlength
 }
 
 Simulation::~Simulation(){
@@ -25,6 +24,10 @@ void Simulation::set_infile(string infilename){
 
 void Simulation::set_outfile(string outfilename){
     outfile.open(outfilename, ios::out);
+}
+
+void Simulation::set_minlength(int Minlength){
+    minlength = Minlength;
 }
 
 void Simulation::write_wigfile(Gene& gene){
@@ -47,9 +50,6 @@ void Simulation::write_wigfile(Gene& gene){
     //open filestream
     std::stringstream ss;
     string wigfile_name = gene.getHeader().c_str();
-    //wigfile_name = wigfile_name + ".wig";
-    wigfile_name = gene.getHeader() + ".wig";
-    ofstream wigfile(wigfile_name,ios::out);
     //compose .wig header
     string name = gene.getName();
     //adjust browser position
@@ -61,7 +61,7 @@ void Simulation::write_wigfile(Gene& gene){
         ss << bp_probabilities[i] << endl;
     }
     //write stringstream to file
-    wigfile << ss.rdbuf();
+    outfile << ss.rdbuf();
 }
 
 void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
@@ -147,12 +147,4 @@ void Simulation::simulation_B(float superehelcity){
 
 void Simulation::sandbox(){ //test/debug environment
 
-}
-
-void Simulation::run_simulations(){ //main method
-    //simulation_A();
-
-    for (float superhelicity=-0.14; superhelicity <= 0.141; superhelicity += 0.01){
-        simulation_B(superhelicity);
-    }
 }
