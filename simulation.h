@@ -47,6 +47,12 @@ public:
      * Computes P(R-Loop is on the sequence) for a given superhelicity level
      */
     void simulation_B(float superhelicity);
+
+    /**
+     * Computes expected length for the ensemble at the given superhelicity value
+     * @param superhelicity
+     */
+    void simulation_C(float superhelicity);
 };
 
 #define RLOOPER2_SIMULATION_H
