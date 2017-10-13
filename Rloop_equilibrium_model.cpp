@@ -95,7 +95,7 @@ void Rloop_equilibrium_model::seta(double a) {
     Rloop_equilibrium_model::a = a;
 }
 
-void Rloop_equilibrium_model::setSigma(double sigma) {
+void Rloop_equilibrium_model::set_superhelicity(double sigma) {
     Rloop_equilibrium_model::sigma = sigma;
     setAlpha(N*sigma*A);
 }

@@ -12,17 +12,30 @@ int main(int argc, char* argv[]) {
     sim.set_outfile(argv[2]);
     for (int i=3; i<argc; i++) {
         if (!strcmp(argv[i], "--sigma")) {
-            model.setSigma(atof(argv[i + 1]));
+            model.set_superhelicity(atof(argv[i + 1]));
             i++;
-        } else if (!strcmp(argv[i], "--a")) {
+        }
+        else if (!strcmp(argv[i], "--a")) {
             model.seta(atof(argv[i + 1]));
             i++;
-        } else if (!strcmp(argv[i], "--minlength")) {
+        }
+        else if (!strcmp(argv[i], "--minlength")) {
             sim.set_minlength(atoi(argv[i + 1]));
             i++;
         }
+        else if (!strcmp(argv[i], "--reverse")){
+            sim.reverse_input();
+        }
+        else if (!strcmp(argv[i], "--complement")){
+            sim.complement_input();
+        }
+        else{
+            cout << "Unrecognized command line option: " << argv[i] << endl;
+            exit(1);
+        }
     }
-    sim.simulation_A(model);
+    sim.add_model(model);
+    sim.simulation_A();
 
     return 0;
 }

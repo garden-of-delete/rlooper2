@@ -10,6 +10,8 @@ void initialize_models(char* model){
 Simulation::Simulation(){
     //default constructor
     minlength = 20; //default minlength
+    reverse_flag = false;
+    complement_flag = false;
 }
 
 Simulation::~Simulation(){
@@ -30,8 +32,20 @@ void Simulation::set_minlength(int Minlength){
     minlength = Minlength;
 }
 
-std::vector<Model>* Simulation::get_models(){
-    return &models;
+void Simulation::reverse_input(){
+    reverse_flag = true;
+}
+
+void Simulation::complement_input(){
+    complement_flag = true;
+}
+
+std::vector<Model*> Simulation::get_models(){
+    return models;
+}
+
+void Simulation::add_model(Model& model){
+    models.push_back(&model);
 }
 
 void Simulation::write_wigfile(Gene& gene){
@@ -68,12 +82,15 @@ void Simulation::write_wigfile(Gene& gene){
     outfile << ss.rdbuf();
 }
 
-void Simulation::simulation_A(Rloop_equilibrium_model modelA){ //some of this code might be migrated into new objects and functions in the future
+void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
     //initialize variables
     if (!infile.is_open()){
         //throw exception
     }
     bool eof = false;
+    if (models.size() < 1){
+        //throw exception
+    }
 
     //do while !eof
     while(eof == false){
@@ -83,8 +100,11 @@ void Simulation::simulation_A(Rloop_equilibrium_model modelA){ //some of this co
         //read gene
         eof = this_gene->read_gene(infile);
         //compute structures using models
-        this_gene->complement_sequence();
-        this_gene->compute_structures(modelA);
+        if (complement_flag)
+            this_gene->complement_sequence();
+        if (reverse_flag)
+            this_gene->invert_sequence();
+        this_gene->compute_structures(*models[0]);
 
         //ensemble analysis, free energies and boltzmann factors have already been computed in compute_structures
         //compute partition function
@@ -94,14 +114,14 @@ void Simulation::simulation_A(Rloop_equilibrium_model modelA){ //some of this co
              it < this_gene->getStructures()[0]->end(); ++it){
                partition_function += it->boltzmann_factor;
         }
-        partition_function += modelA.ground_state_factor();
+        partition_function += models[0]->ground_state_factor();
         //compute boltzmann weights and store in the structures
         for (vector<Structure>::iterator it = this_gene->getStructures()[0]->begin();
              it < this_gene->getStructures()[0]->end(); ++it){
             it->probability = it->boltzmann_factor/partition_function;
             sanity_check += it->boltzmann_factor/partition_function;
         }
-        sanity_check += modelA.ground_state_factor()/partition_function;
+        sanity_check += models[0]->ground_state_factor()/partition_function;
         cout << "Partition function sum: " << sanity_check << endl; //replace with exception handling
         //compute p(base-pair i is in an R-Loop structure) and write to file
         write_wigfile(*this_gene);
@@ -115,11 +135,18 @@ void Simulation::simulation_A(Rloop_equilibrium_model modelA){ //some of this co
 
 //computes P(R-Loop) for the provided supercoiling value
 void Simulation::simulation_B(float superhelicity){
+    if (!infile.is_open()){
+        //throw exception
+    }
+    if (models.size() < 1){
+        //throw exception
+    }
     float p_rloop = 0;
     Gene* this_gene;
     if (!genes.size()){
         this_gene = new Gene();
         this_gene->read_gene(infile);
+        this_gene->windower.set_min_window_size(minlength);
         this_gene->complement_sequence();
         //this_gene->invert_sequence();
         genes.push_back(this_gene);
@@ -127,9 +154,8 @@ void Simulation::simulation_B(float superhelicity){
     else{
         this_gene = genes[0];
     }
-    Rloop_equilibrium_model modelA;
-    modelA.setSigma(superhelicity); //set the superhelicity in the model to the provided value
-    this_gene->compute_structures(modelA);
+    models[0]->set_superhelicity(superhelicity); //set the superhelicity in the model to the provided value
+    this_gene->compute_structures(*(models[0]));
     //determine P(ground state)
     long double partition_function = 0;
     long double ground_state_factor = 0;
@@ -140,7 +166,7 @@ void Simulation::simulation_B(float superhelicity){
         partition_function += it->boltzmann_factor;
         count++;
     }
-    ground_state_factor = modelA.ground_state_factor();
+    ground_state_factor = models[0]->ground_state_factor();
     partition_function += ground_state_factor;
     //determine P(R-Loop) as 1-P(ground state)
     p_rloop = 1 - (ground_state_factor/partition_function);
@@ -149,10 +175,17 @@ void Simulation::simulation_B(float superhelicity){
 }
 
 void Simulation::simulation_C(float superhelicity){
+    if (!infile.is_open()){
+        //throw exception
+    }
+    if (models.size() < 1){
+        //throw exception
+    }
     Gene* this_gene;
     if (!genes.size()){
         this_gene = new Gene();
         this_gene->read_gene(infile);
+        this_gene->windower.set_min_window_size(minlength);
         this_gene->complement_sequence();
         //this_gene->invert_sequence();
         genes.push_back(this_gene);
@@ -160,9 +193,8 @@ void Simulation::simulation_C(float superhelicity){
     else{
         this_gene = genes[0];
     }
-    Rloop_equilibrium_model modelA;
-    modelA.setSigma(superhelicity); //set the superhelicity in the model to the provided value
-    this_gene->compute_structures(modelA);
+    models[0]->set_superhelicity(superhelicity); //set the superhelicity in the model to the provided value
+    this_gene->compute_structures(*models[0]);
     //determine P(ground state)
     long double partition_function = 0;
     long double ground_state_factor = 0;
@@ -173,7 +205,7 @@ void Simulation::simulation_C(float superhelicity){
         partition_function += it->boltzmann_factor;
         count++;
     }
-    ground_state_factor = modelA.ground_state_factor();
+    ground_state_factor = models[0]->ground_state_factor();
     partition_function += ground_state_factor;
     //determine expected length at the given superhelicity value
     double expected_length = 0;

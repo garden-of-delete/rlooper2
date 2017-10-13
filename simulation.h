@@ -9,11 +9,13 @@
 
 class Simulation{
 private:
-    std::vector<Model> models;
+    std::vector<Model*> models;
     std::vector<Gene*> genes;
     ifstream infile;
     ofstream outfile;
     int minlength; //a minimum loop length to be applied simulation-wide.
+    bool reverse_flag;
+    bool complement_flag;
     //member functions
 
     /**
@@ -35,16 +37,19 @@ public:
     void set_infile(string infilename);
     void set_outfile(string outfilename);
     void set_minlength(int Minlength);
-    std::vector<Model>* get_models();
+    void reverse_input();
+    void complement_input();
+    std::vector<Model*> get_models();
+    void add_model(Model& model);
 
     //simulation protocols
     /**
-     * Ensemble analysis on a set of genes. Further description needed.
+     * Ensemble analysis on a set of genes. Supports one model.
      */
-    void simulation_A(Rloop_equilibrium_model modelA);
+    void simulation_A();
 
     /**
-     * Computes P(R-Loop is on the sequence) for a given superhelicity level
+     * Computes P(R-Loop is on the sequence) for a given superhelicity level. Supports any number of models.
      */
     void simulation_B(float superhelicity);
 

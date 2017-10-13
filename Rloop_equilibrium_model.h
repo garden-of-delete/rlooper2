@@ -19,9 +19,8 @@ protected:
     double k; //Hooke's law coefficient: (2200*ideal_gas_constant in kcal/mol*absolute_temp_in_kelvin)/N
     double T; //temparature
     double a; //Neucleation Free Energy (junction energy) in Kcals (~3-10.2kCals) 5000
-    double sigma; //measurement of energy upstream of replication domain
+    double sigma; //measurement of energy upstream of replication domain. Moved to up the Model object.
     double alpha; //linking difference: topological parameter. refers to the percent of twists difference.
-
     //energy difference for the described RNA/DNA dinucleotide pairs (RNA/DNA - DNA/DNA) in kcal/mol as described in Huppert et. al. 2008
     //note, energies are for the RNA (non-template/sense DNA) strand in the 5' to 3' direction
     double rGG_dCC;
@@ -63,7 +62,7 @@ public:
     void setK(double k);
     void setT(double T);
     void seta(double a);
-    void setSigma(double sigma);
+    void set_superhelicity(double sigma);
     void setAlpha(double alpha);
 
     //member functions
