@@ -127,7 +127,7 @@ double Rloop_equilibrium_model::compute_bps_interval(const char &first, const ch
         if (second == 'C') //CC
             return rGG_dCC;
         else if (second == 'G') //CG
-            return rCG_dGC;
+            return rGC_dCG;
         else if (second == 'T') //CT
             return rGA_dCT;
         else //CA
