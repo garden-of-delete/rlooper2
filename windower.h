@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <iostream>
+#include "exception_handling.h"
 
 class Windower {
 private:

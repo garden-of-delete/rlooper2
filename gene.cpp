@@ -125,7 +125,7 @@ bool Gene::read_gene(ifstream& fastafile) { //need to test
     char c,p;
     //check that fstream is open and not eof, throw exceptions otherwise
     if (!fastafile.is_open()) {
-        throw UnexpectedClosedFileException();
+        throw UnexpectedClosedFileException("Gene::read_gene");
     } else if (fastafile.eof()) {
         throw UnexpectedEOFException();
     }

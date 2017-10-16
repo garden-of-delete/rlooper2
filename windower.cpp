@@ -18,7 +18,7 @@ int Windower::get_min_window_size(){
 
 void Windower::set_min_window_size(int size){
     if (size < 2){
-        //throw exception
+        throw WindowerException();
     }
     min_window_size = size;
 }

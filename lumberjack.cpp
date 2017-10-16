@@ -3,6 +3,7 @@
 //
 
 #include "lumberjack.h"
+#include "exception_handling.h"
 
 Lumberjack::Lumberjack(int _logging_level){
     logging_level = _logging_level;
@@ -29,14 +30,14 @@ string Lumberjack::get_time(){
 
 void Lumberjack::log_status(string message){
     if (!logfile.is_open()){
-        //throw exception
+        throw UnexpectedClosedFileException("Lumberjack::log_status");
     }
     logfile << get_time() << " status: " << message << endl;
 }
 
 void Lumberjack::log_debug(string message){
     if (!logfile.is_open()){
-        //throw exception
+        throw UnexpectedClosedFileException("Lumberjack::log_debug");
     }
     logfile << get_time() << " status: " << message << endl;
 }

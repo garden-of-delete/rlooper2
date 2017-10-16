@@ -85,7 +85,7 @@ void Simulation::write_wigfile(Gene& gene){
 void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
     //initialize variables
     if (!infile.is_open()){
-        //throw exception
+        throw UnexpectedClosedFileException("Simulation::simulation_A");
     }
     bool eof = false;
     if (models.size() < 1){
@@ -136,7 +136,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
 //computes P(R-Loop) for the provided supercoiling value
 void Simulation::simulation_B(float superhelicity){
     if (!infile.is_open()){
-        //throw exception
+        throw UnexpectedClosedFileException("Simulation::simulation_B");
     }
     if (models.size() < 1){
         //throw exception
@@ -176,7 +176,7 @@ void Simulation::simulation_B(float superhelicity){
 
 void Simulation::simulation_C(float superhelicity){
     if (!infile.is_open()){
-        //throw exception
+        throw UnexpectedClosedFileException("Simulation::simulation_C");
     }
     if (models.size() < 1){
         //throw exception
