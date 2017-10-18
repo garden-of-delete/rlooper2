@@ -19,11 +19,11 @@ Lumberjack::~Lumberjack(){
 }
 
 string Lumberjack::get_time(){
-    auto t = std::time(nullptr);
-    auto tm = *std::localtime(&t);
+    auto t = time(nullptr);
+    auto tm = *localtime(&t);
 
     std::ostringstream oss;
-    oss << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+    oss << put_time(&tm, "%d-%m-%Y %H-%M-%S");
     string str = oss.str();
     return str;
 }
