@@ -12,7 +12,7 @@ CRFLAGS =
 .c.o:
 	$(CR) $(CRFLAGS) -c $*.c -o $*.o
 
-OBJS = gene.o lumberjack.o model.o Rloop_equilibrium_model.o simulation.o structure.o windower.o
+OBJS = gene.o model.o Rloop_equilibrium_model.o simulation.o structure.o windower.o
 
 all: programs
 

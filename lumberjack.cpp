@@ -3,7 +3,6 @@
 //
 
 #include "lumberjack.h"
-#include "exception_handling.h"
 
 Lumberjack::Lumberjack(int _logging_level){
     logging_level = _logging_level;
@@ -23,7 +22,7 @@ string Lumberjack::get_time(){
     auto tm = *localtime(&t);
 
     std::ostringstream oss;
-    oss << put_time(&tm, "%d-%m-%Y %H-%M-%S");
+    oss << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
     string str = oss.str();
     return str;
 }

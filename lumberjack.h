@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include "exception_handling.h"
 
 using namespace std;
 

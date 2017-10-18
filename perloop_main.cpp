@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "simulation.h"
+#include <string.h>
 
 using namespace std;
 
