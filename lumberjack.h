@@ -6,7 +6,7 @@
 #define RLOOPER2_LUMBERJACK_H
 
 #include <string>
-#include <time.h>
+#include <ctime>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
