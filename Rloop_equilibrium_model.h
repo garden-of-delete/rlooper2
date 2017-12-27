@@ -39,6 +39,8 @@ protected:
     double rUC_dAG;
     double rUA_dAT;
     double rUU_dAA;
+    bool homopolymer_override;
+    double override_energy;
 
 public:
     //constructors
@@ -64,6 +66,7 @@ public:
     void seta(double a);
     void set_superhelicity(double sigma);
     void setAlpha(double alpha);
+    void set_bp_energy_override(double energy);
 
     //member functions
     double step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second);

@@ -30,6 +30,11 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[i], "--complement")){
             sim.complement_input();
         }
+        else if (!strcmp(argv[i], "--sandbox")){
+            sim.add_model(model);
+            sim.sandbox();
+            return 0;
+        }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;
             exit(1);

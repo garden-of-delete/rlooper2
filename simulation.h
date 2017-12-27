@@ -6,6 +6,8 @@
 #include "Rloop_equilibrium_model.h"
 #import "exception_handling.h"
 #import <sstream>
+#import <cstdlib>
+#import <cmath>
 
 class Simulation{
 private:
@@ -24,10 +26,7 @@ private:
      */
     void write_wigfile(Gene& gene);
 
-    /**
-    * A test environmnet for debugging purposes
-    */
-    void sandbox();
+    void write_wigfile2(Gene& gene);
 
 public:
     Simulation();
@@ -58,6 +57,11 @@ public:
      * @param superhelicity
      */
     void simulation_C(float superhelicity);
+
+    /**
+    * A test environmnet for debugging purposes
+    */
+    void sandbox();
 };
 
 #define RLOOPER2_SIMULATION_H

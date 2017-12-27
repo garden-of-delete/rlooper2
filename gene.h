@@ -69,6 +69,11 @@ public:
     void compute_structures(Model& model);
 
     /**
+     * Clears all structures associated with the gene, correctly deallocating them in memory.
+     */
+    void clear_structures();
+
+    /**
      * Computes the GC skew of the provided sequence.
      * @return  returns a float representing the GC skew.
      */

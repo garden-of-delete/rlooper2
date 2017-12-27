@@ -49,7 +49,6 @@ void Simulation::add_model(Model& model){
 }
 
 void Simulation::write_wigfile(Gene& gene){
-
     //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
     std::vector<double> bp_probabilities(gene.get_length(),0.0);
     //for each structure in the gene
@@ -79,6 +78,39 @@ void Simulation::write_wigfile(Gene& gene){
         ss << bp_probabilities[i] << endl;
     }
     //write stringstream to file
+    outfile << ss.rdbuf();
+}
+
+void Simulation::write_wigfile2(Gene& gene){
+    //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
+    std::vector<double> bp_probabilities(gene.get_length(),0.0);
+    //for each structure in the gene
+    for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
+         it < gene.getStructures()[0]->end(); ++it){
+        //for each base in the structure
+        for(long int i=it->position.start_pos-gene.getPosition().start_pos;
+            i < it->position.end_pos-gene.getPosition().start_pos; i++){
+            bp_probabilities[i] += it->probability;
+        }
+    }
+    //if strand is -, reverse bp_probabilities
+    if (gene.getPosition().strand == "-"){
+        std::reverse(bp_probabilities.begin(),bp_probabilities.end());
+    }
+    //open filestream
+    std::stringstream ss;
+    string wigfile_name = gene.getHeader().c_str();
+    //compose .wig header
+    string name = gene.getName();
+    //adjust browser position
+    ss << "browser position " << gene.getPosition().chromosome << ':' << gene.getPosition().start_pos << '-' <<
+       gene.getPosition().end_pos << endl;
+    ss << "track type=wiggle_0 name=\"" << name << "\" visibility=full autoscale=off color=50,150,255 priority=10" << endl;
+    ss << "fixedStep chrom=" << gene.getPosition().chromosome << " start=" << gene.getPosition().start_pos << " step=1" << endl;
+    for (int i=0; i < bp_probabilities.size(); i++){
+        ss << bp_probabilities[i] << endl;
+    }
+    //write stringstream to filei
     outfile << ss.rdbuf();
 }
 
@@ -155,6 +187,7 @@ void Simulation::simulation_B(float superhelicity){
         this_gene = genes[0];
     }
     models[0]->set_superhelicity(superhelicity); //set the superhelicity in the model to the provided value
+    this_gene->clear_structures(); //saves memory
     this_gene->compute_structures(*(models[0]));
     //determine P(ground state)
     long double partition_function = 0;
@@ -218,5 +251,78 @@ void Simulation::simulation_C(float superhelicity){
 }
 
 void Simulation::sandbox(){ //test/debug environment
+    if (!infile.is_open()){
+        throw UnexpectedClosedFileException("Simulation::sandbox");
+    }
+    Gene geneA;
+    geneA.read_gene(infile); //sequence being read in is not used for anything
+    //craig's simulation
+    double lower_bound = -0.5;
+    double upper_bound = 1.0;
+    double supercoiling = 0.0;
+    double last_supercoiling = 0.0;
+    vector<double> x;
+    vector<double> y;
+    double step_size = .01;
+    double tolerance = 0.05;
+    char last_direction = 'n';
 
+    Rloop_equilibrium_model modelA;
+    //modelA.setMinimum_loop_length(minlength); //not functional, needs to be removed
+    geneA.windower.set_min_window_size(minlength);
+    //for each base pairing energy
+    for (double bp_energy = lower_bound; bp_energy <= upper_bound; bp_energy += 0.1){
+        //for each level of supercoiling
+        supercoiling = last_supercoiling;
+        while(true) {
+            cout << "For bp_energy: " << bp_energy << ", and supercoiling: " << supercoiling << endl;
+            //set supercoiling
+            modelA.set_superhelicity(supercoiling);
+            modelA.set_bp_energy_override(bp_energy);
+            //dump previous ensemble of structures
+            geneA.clear_structures();
+            //compute ensemble
+            geneA.compute_structures(modelA);
+            //sum the probabilities of all R-loop structures
+            double partition_function = 0;
+            for (vector<Structure>::iterator it = geneA.getStructures()[0]->begin(); it != geneA.getStructures()[0]->end(); ++it){
+                partition_function += it.base()->boltzmann_factor;
+            }
+            //compare to the partition function
+            // if the P(R-loop) is > 50% + tol
+            if (partition_function/(partition_function+modelA.ground_state_factor()) < .5){
+                //adjust supercoiling down
+                if (last_direction == 'u'){
+                    //overshot the target and outside the error tolerance
+                    step_size /= 0.5; //cut step size in half
+                }
+                supercoiling -= step_size;
+                last_direction = 'd';
+            }
+                //if the {(R-loop) is < 50% - tol
+            /*else if (partition_function/(partition_function+modelA.ground_state_factor()) < .5-tolerance){
+                //adjust supercoiling up
+                if (last_direction == 'd'){
+                    //overshot the target and outside the error tolerance
+                    step_size /= 0.5; //cut step size in half
+                }
+                supercoiling += step_size;
+                last_direction = 'u';
+            }*/
+            else { //hit target within tolerance
+                cout << "complete" << endl;
+                x.push_back(bp_energy);
+                y.push_back(supercoiling);
+                last_supercoiling = supercoiling; //improves search efficiency at the next bp_energy
+                break;
+            }
+        }
+    }
+    //write result
+    stringstream ss;
+    for (int i=0; i < x.size(); i++){
+        ss << x[i] << ' ' << y[i] << endl;
+    }
+    outfile << ss.rdbuf();
+    outfile.close();
 }

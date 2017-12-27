@@ -45,11 +45,7 @@ Gene::Gene(){
 }
 
 Gene::~Gene(){
-    for(std::vector<std::vector<Structure>*>::iterator it = structures.begin();
-        distance(structures.begin(), it) < structures.size(); ++it){
-
-        delete *it; //need to test this rs 7.11.17
-    }
+    clear_structures();
 }
 
 //getters and setters
@@ -197,6 +193,13 @@ void Gene::compute_structures(Model &model){
     }
     //windower.print_current_window(); //DEBUG
     structures.push_back(these_structures);
+}
+
+void Gene::clear_structures(){
+    for (auto it = structures.begin(); it != structures.end(); ++it ){
+        delete *it;
+    }
+    structures.clear();
 }
 
 void Gene::complement_sequence(){

@@ -46,7 +46,24 @@ int main(int argc, char* argv[]) {
 
     //run simulation
     sim.add_model(model);
-        for (float superhelicity=supercoiling_lower_bound; superhelicity <= supercoiling_upper_bound+0.0001; superhelicity += 0.01){
+/*
+    vector<vector<Structure>*> outer;
+    vector<Structure>* inner = new vector<Structure>;
+    inner->push_back(Structure());
+    inner->push_back(Structure());
+    inner->push_back(Structure());
+    inner->push_back(Structure());
+    inner->push_back(Structure());
+    outer.push_back(inner);
+    cout << outer.size() << ' ' << inner->size()<<endl;
+    for (auto it = outer.begin(); it < outer.end(); ++it){
+        delete *it;
+    }
+    outer.clear();
+    cout << outer.size() << ' ' << inner->size()<<endl;
+*/
+        for (float superhelicity=supercoiling_lower_bound; superhelicity <= supercoiling_upper_bound+0.0001; superhelicity += 0.001){
+            cout << superhelicity << endl;
             sim.simulation_B(superhelicity);
         }
     return 0;

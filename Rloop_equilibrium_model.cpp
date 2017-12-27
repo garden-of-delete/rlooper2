@@ -34,6 +34,8 @@ Rloop_equilibrium_model::Rloop_equilibrium_model() {
     rUC_dAG = .5;
     rUA_dAT = .28;
     rUU_dAA = .8;
+    homopolymer_override = false;
+    override_energy = 0.0;
 }
 
 //getters
@@ -122,7 +124,12 @@ double Rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& f
     return I_0;
 }
 
+void set_bp_energy_override();
+
 double Rloop_equilibrium_model::compute_bps_interval(const char &first, const char &second){
+    if (homopolymer_override == true){
+        return override_energy;
+    }
     if (first == 'C'){ //C
         if (second == 'C') //CC
             return rGG_dCC;
@@ -163,6 +170,11 @@ double Rloop_equilibrium_model::compute_bps_interval(const char &first, const ch
         else //AA
             return rUU_dAA;
     }
+}
+
+void Rloop_equilibrium_model::set_bp_energy_override(double energy){
+    homopolymer_override = true;
+    override_energy = energy;
 }
 
 void Rloop_equilibrium_model::compute_structure(const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
