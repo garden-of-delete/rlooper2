@@ -40,7 +40,6 @@ void Gene::parse_header(){
 }
 //constructors and destructors
 Gene::Gene(){
-    contains_peaks = false;
     windower.set_sequence(sequence);
 }
 
@@ -73,29 +72,8 @@ const vector<char, allocator<char>> &Gene::getSequence() const {
     return sequence;
 }
 
-/*void Gene::setSequence(const vector<char, allocator<char>> &this_sequence) {
-    sequence = this_sequence;
-    windower.set_sequence(Gene::sequence);
-}*/
-
 vector<vector<Structure>*> Gene::getStructures(){
     return structures;
-}
-
-bool Gene::isContains_peaks() const {
-    return contains_peaks;
-}
-
-void Gene::setContains_peaks(bool contains_peaks) {
-    Gene::contains_peaks = contains_peaks;
-}
-
-const vector<Peak, allocator<Peak>> &Gene::getDripseq_peaks() const {
-    return dripseq_peaks;
-}
-
-void Gene::setDripseq_peaks(const vector<Peak, allocator<Peak>> &dripseq_peaks) {
-    Gene::dripseq_peaks = dripseq_peaks;
 }
 
 float Gene::compute_GC_skew(){
@@ -228,7 +206,7 @@ int Gene::get_length(){
     return abs(position.end_pos - position.start_pos); //abs here or negative length exception?
 }
 
-void Gene::unload(){
+void Gene::clear_sequence(){
     //delete sequence data
     sequence.clear();
 }

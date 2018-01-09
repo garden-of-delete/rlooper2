@@ -35,7 +35,7 @@ expected_length: bin $(OBJS) expected_length_main.o
 
 clean: 
 	@echo Clean.
-	rm -f *.o *.a tests/*.o xinger/*.o
+	rm -f *.o *.a tests/*.o
 
 clobber: clean
 	@echo Clobber.

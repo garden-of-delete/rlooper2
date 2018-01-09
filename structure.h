@@ -13,7 +13,7 @@ public:
     long int start_pos;
     long int end_pos;
     Loci(): start_pos(0), end_pos(0) {}
-    Loci(std::string, std::string, int, int);
+    Loci(std::string, std::string, long int, long int);
 
     /**
      * Returns the length in base pairs of the loci

@@ -14,16 +14,13 @@
 
 class Gene{
 private:
+    //private member functions
     std::string gene_name;
     std::string header;
     Loci position;
     std::vector<char> sequence;
     std::vector<std::vector<Structure>*> structures;
-    //dripseq peak related
-    bool contains_peaks;
-    std::vector<Peak> dripseq_peaks;
 
-    //private member functions
     /**
      * parses FASTA headers into the Gene's Loci member.
      */
@@ -45,10 +42,6 @@ public:
     const vector<char, allocator<char>> &getSequence() const;
     //void setSequence(const vector<char, allocator<char>> &sequence);
     vector<vector<Structure>*> getStructures();
-    bool isContains_peaks() const;
-    void setContains_peaks(bool contains_peaks);
-    const vector<Peak, allocator<Peak>> &getDripseq_peaks() const;
-    void setDripseq_peaks(const vector<Peak, allocator<Peak>> &dripseq_peaks);
     //member functions
     /**
      * Reads the next FASTA record from the input file. Calls parse_header.
@@ -101,9 +94,9 @@ public:
      * Returns the length of the gene
      * @return  returns an int computed from the gene's location
      */
-     int get_length();
+    int get_length();
 
-    void unload();
+    void clear_sequence();
 
 };
 

@@ -28,6 +28,10 @@ void Simulation::set_outfile(string outfilename){
     outfile.open(outfilename, ios::out);
 }
 
+void Simulation::set_outfile2(string outfilename){
+    outfile2.open(outfilename, ios::out);
+}
+
 void Simulation::set_minlength(int Minlength){
     minlength = Minlength;
 }
@@ -48,70 +52,98 @@ void Simulation::add_model(Model& model){
     models.push_back(&model);
 }
 
-void Simulation::write_wigfile(Gene& gene){
+void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
+    signal = new vector<double>(gene.get_length(), 0.0);
     //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
-    std::vector<double> bp_probabilities(gene.get_length(),0.0);
     //for each structure in the gene
     for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
-         it < gene.getStructures()[0]->end(); ++it){
+         it < gene.getStructures()[0]->end(); ++it) {
         //for each base in the structure
-        for(long int i=it->position.start_pos-gene.getPosition().start_pos;
-            i <it->position.end_pos-gene.getPosition().start_pos; i++){
-            bp_probabilities[i] += it->probability;
+        for (long int i = it->position.start_pos - gene.getPosition().start_pos;
+             i < it->position.end_pos - gene.getPosition().start_pos; i++) {
+            (*signal)[i] += it->probability;
         }
     }
     //if strand is -, reverse bp_probabilities
-    if (gene.getPosition().strand == "-"){
-        std::reverse(bp_probabilities.begin(),bp_probabilities.end());
+    if (gene.getPosition().strand == "-") {
+        std::reverse(signal->begin(), signal->end());
     }
-    //open filestream
+}
+
+void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks){
+    int power_threshold = 6; //needs to be made a class variable
+    double minimum = 1;
+    bool in_peak = false;
+    long peak_start=0, peak_end=0;
+    double magnitude = 0;
+    Structure* temp;
+    for (int i=0; i < signal.size(); i++){
+        //determine lowest value in the signal
+        if (signal[i] < minimum){
+            minimum = signal[i];
+        }
+    }
+    for (int i=0; i < signal.size(); i++){
+        if (signal[i] > minimum*pow(10,power_threshold)){ //the signal is significant
+            if (!in_peak){
+                in_peak = true;
+                peak_start = gene.getPosition().start_pos + i;
+            }
+        }
+        else{ //the signal is not significant
+            if (in_peak){
+                in_peak = false;
+                peak_end = gene.getPosition().start_pos + i;
+                peaks.emplace_back(Loci(gene.getPosition().chromosome,gene.getPosition().strand, peak_start, peak_end)); //chromosome, strand, start_pos, end_pos
+            }
+        }
+    }
+}
+
+void Simulation::write_wigfile(Gene* gene, std::vector<double>* signal){
+    //open stringstream
     std::stringstream ss;
-    string wigfile_name = gene.getHeader().c_str();
+    string wigfile_name = gene->getHeader().c_str();
     //compose .wig header
-    string name = gene.getName();
+    string name = gene->getName();
     //adjust browser position
-    ss << "browser position " << gene.getPosition().chromosome << ':' << gene.getPosition().start_pos << '-' <<
-       gene.getPosition().end_pos << endl;
-    ss << "track type=wiggle_0 name=\"" << name << "\" visibility=full autoscale=off color=50,150,255 priority=10" << endl;
-    ss << "fixedStep chrom=" << gene.getPosition().chromosome << " start=" << gene.getPosition().start_pos << " step=1" << endl;
-    for (int i=0; i < bp_probabilities.size(); i++){
-        ss << bp_probabilities[i] << endl;
+    ss << "browser position " << gene->getPosition().chromosome << ':' << gene->getPosition().start_pos << '-' <<
+       gene->getPosition().end_pos << endl;
+    ss << "track type=wiggle_0 name=\"" << name << "\" visibility=full autoscale=off color=50,150,255 priority=10"
+       << endl;
+    ss << "fixedStep chrom=" << gene->getPosition().chromosome << " start=" << gene->getPosition().start_pos << " step=1"
+       << endl;
+    for (int i = 0; i < signal->size(); i++) {
+        ss << (*signal)[i] << endl;
     }
     //write stringstream to file
     outfile << ss.rdbuf();
 }
 
-void Simulation::write_wigfile2(Gene& gene){
-    //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
-    std::vector<double> bp_probabilities(gene.get_length(),0.0);
-    //for each structure in the gene
-    for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
-         it < gene.getStructures()[0]->end(); ++it){
-        //for each base in the structure
-        for(long int i=it->position.start_pos-gene.getPosition().start_pos;
-            i < it->position.end_pos-gene.getPosition().start_pos; i++){
-            bp_probabilities[i] += it->probability;
-        }
+void Simulation::write_bedfile(Gene* gene, vector<Loci>& peaks){
+    //write bedfile
+    stringstream ss;
+    string strand_name;
+    int start_pos=0, end_pos=0;
+
+    if (gene->getPosition().strand == "+"){
+        strand_name = "POS";
     }
-    //if strand is -, reverse bp_probabilities
-    if (gene.getPosition().strand == "-"){
-        std::reverse(bp_probabilities.begin(),bp_probabilities.end());
+    else {
+        strand_name = "NEG";
     }
-    //open filestream
-    std::stringstream ss;
-    string wigfile_name = gene.getHeader().c_str();
-    //compose .wig header
-    string name = gene.getName();
-    //adjust browser position
-    ss << "browser position " << gene.getPosition().chromosome << ':' << gene.getPosition().start_pos << '-' <<
-       gene.getPosition().end_pos << endl;
-    ss << "track type=wiggle_0 name=\"" << name << "\" visibility=full autoscale=off color=50,150,255 priority=10" << endl;
-    ss << "fixedStep chrom=" << gene.getPosition().chromosome << " start=" << gene.getPosition().start_pos << " step=1" << endl;
-    for (int i=0; i < bp_probabilities.size(); i++){
-        ss << bp_probabilities[i] << endl;
+    ss << "browser position " << gene->getPosition().chromosome << ':' << gene->getPosition().start_pos << '-' <<
+       gene->getPosition().end_pos << endl;
+    ss << "track name=rLooper description=\""<< gene->getName()<<"\" useScore=1" << endl;
+    //print BED header here
+    //print the peaks in BED format
+    for (int i=0; i < peaks.size(); i++){
+        ss << peaks[i].chromosome << '\t' << (peaks)[i].start_pos << '\t' << peaks[i].end_pos
+           << '\t' << strand_name << i << '\t' << '0' << '\t' << peaks[i].strand << endl;
     }
-    //write stringstream to filei
-    outfile << ss.rdbuf();
+    //write stringstream to file
+    outfile2 << ss.rdbuf();
+    outfile2.close();
 }
 
 void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
@@ -123,7 +155,6 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     if (models.size() < 1){
         //throw exception
     }
-
     //do while !eof
     while(eof == false){
         //allocate new gene
@@ -154,12 +185,21 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             sanity_check += it->boltzmann_factor/partition_function;
         }
         sanity_check += models[0]->ground_state_factor()/partition_function;
-        cout << "Partition function sum: " << sanity_check << endl; //replace with exception handling
-        //compute p(base-pair i is in an R-Loop structure) and write to file
-        write_wigfile(*this_gene);
-
-        //unload the sequence data from the gene to save memory
-        this_gene->unload();
+        cout << "Partition function sum: " << sanity_check << endl; //replace with exception handling at some point
+        vector<double>* signal = NULL;
+        vector<Loci> peaks;
+        compute_signal_bpprobs(*this_gene, signal);
+        write_wigfile(this_gene,signal);
+        //call peaks
+        if (outfile2.is_open()){
+            call_peaks_threshold(*this_gene,*signal,peaks); //possible null pointer exception generated here
+            //write to bedfile
+            write_bedfile(this_gene,peaks);
+        }
+        delete signal;
+        //clear_sequence the sequence data from the gene to save memory
+        this_gene->clear_sequence();
+        this_gene->clear_structures();
         //store the gene in the genes vector
         genes.push_back(this_gene);
     }

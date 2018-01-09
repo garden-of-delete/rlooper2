@@ -4,7 +4,7 @@
 
 #include "structure.h"
 
-Loci::Loci(std::string C, std::string c, int s, int e): chromosome(C), strand(c), start_pos(s), end_pos(e) {}
+Loci::Loci(std::string C, std::string c, long int s, long int e): chromosome(C), strand(c), start_pos(s), end_pos(e) {}
 
 int Loci::get_length(){
     return end_pos - start_pos;
