@@ -89,4 +89,16 @@ class WindowerException: public exception{
         return "A fatal error has occurred in the Windower class.";
     }
 };
+
+class SimulationException: public exception {
+private:
+    string description_message;
+    string message = "The simulation has thrown an unhandled excpetion: ";
+public:
+    SimulationException(string c) {
+        stringstream ss;
+        ss << c;
+        ss >> description_message;
+    }
+};
 #endif //RLOOPER2_EXCEPTION_HANDLING_H

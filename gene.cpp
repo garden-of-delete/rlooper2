@@ -13,16 +13,21 @@ void Gene::parse_header(){
     //extract gene name
     pos = header.find('=');
     name = header.substr(0,pos);
-    gene_name = name; //need to further parse the name
+     //need to further parse the name
     pos = header.find(' ');
     name = name.substr(1,pos);
     remaining = header.substr(pos+1, header.length());
+    pos = name.find(' ');
+    name = name.substr(0,pos);
+    gene_name = name;
     //extract chromosome name
     pos = remaining.find('=');
     remaining = remaining.substr(pos+1, remaining.length());
     pos = remaining.find(':');
     position.chromosome = remaining.substr(0,pos);
+    //for (auto & c: position.chromosome) c = toupper(c); //C++11 string toUpper
     std::transform(position.chromosome.begin(), position.chromosome.end(), position.chromosome.begin(), ::tolower);
+    std::transform(position.chromosome.end()-1, position.chromosome.end(), position.chromosome.end()-1, ::toupper);
     remaining = remaining.substr(pos+1, remaining.length());
     //extract the start and stop locations
     pos = remaining.find("-");

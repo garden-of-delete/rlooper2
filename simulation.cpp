@@ -18,6 +18,8 @@ Simulation::~Simulation(){
     for(std::vector<Gene*>::iterator it = genes.begin(); std::distance(genes.begin(),it) < genes.size(); ++it){
         delete *it; //need to test this destructor
     }
+    outfile.close();
+    outfile2.close();
 }
 
 void Simulation::set_infile(string infilename){
@@ -143,7 +145,6 @@ void Simulation::write_bedfile(Gene* gene, vector<Loci>& peaks){
     }
     //write stringstream to file
     outfile2 << ss.rdbuf();
-    outfile2.close();
 }
 
 void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
@@ -162,6 +163,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         this_gene->windower.set_min_window_size(minlength);
         //read gene
         eof = this_gene->read_gene(infile);
+        cout << "processing gene: " << this_gene->getName() << "...";
         //compute structures using models
         if (complement_flag)
             this_gene->complement_sequence();
@@ -185,7 +187,10 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             sanity_check += it->boltzmann_factor/partition_function;
         }
         sanity_check += models[0]->ground_state_factor()/partition_function;
-        cout << "Partition function sum: " << sanity_check << endl; //replace with exception handling at some point
+        double test = fabs(1-sanity_check);
+        if (fabs(1-sanity_check) > .00001){
+            throw SimulationException("Probsum != 1"); //this throw is uncaught
+        }
         vector<double>* signal = NULL;
         vector<Loci> peaks;
         compute_signal_bpprobs(*this_gene, signal);
@@ -196,6 +201,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             //write to bedfile
             write_bedfile(this_gene,peaks);
         }
+        cout << "complete!" << endl;
         delete signal;
         //clear_sequence the sequence data from the gene to save memory
         this_gene->clear_sequence();
