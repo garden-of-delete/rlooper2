@@ -1,9 +1,9 @@
 //
 // Created by Robert Stolz on 6/27/17.
 //
-#import "gene.h"
-#import <vector>
-#import "model.h"
+#include "gene.h"
+#include <vector>
+#include "model.h"
 
 #ifndef RLOOPER2_RLOOP_EQUILIBRIUM_MODEL_H
 #define RLOOPER2_RLOOP_EQUILIBRIUM_MODEL_H

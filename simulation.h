@@ -8,10 +8,10 @@
 #include <array>
 #include <random>
 #include <chrono>
-#import "exception_handling.h"
-#import <sstream>
-#import <cstdlib>
-#import <cmath>
+#include "exception_handling.h"
+#include <sstream>
+#include <cstdlib>
+#include <cmath>
 
 class Simulation{
 private:
