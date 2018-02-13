@@ -73,7 +73,7 @@ void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
 }
 
 void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks){
-    int power_threshold = 6; //needs to be made a class variable
+    int power_threshold = 12; //needs to be made a class variable
     double minimum = 1;
     bool in_peak = false;
     long peak_start=0, peak_end=0;
@@ -102,6 +102,129 @@ void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector
     }
 }
 
+void Simulation::cluster_k_intervals(vector<Loci> &peaks, vector<Loci> &clustered_peaks){
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::cout << "rng seed: " << seed << endl;
+    vector<double> costs;
+    vector<int> chosen_peaks;
+    vector<int> clustering_tally;
+    for (int i=0; i<peaks.size(); i++){
+        clustering_tally.push_back(0);
+    }
+    int k;
+    k = 5;
+    for (int i=0; i < 1000; i++){
+        lloyds_algorithm(peaks,chosen_peaks,k,seed);
+        for (int j=0; j < chosen_peaks.size(); j++){
+            clustering_tally[chosen_peaks[j]]++;
+        }
+        chosen_peaks.empty();
+    }
+    //push the most common cluster representatives onto clustered peaks
+}
+
+double Simulation::lloyds_algorithm(vector<Loci> &peaks, vector<int> &clustering, int k, unsigned seed){
+    bool swaps = true;
+    vector<int> medoid_indeces; //maps medoid index to actual element in the matrix
+    vector<int> medoid_assignments; //the INDEX of the medoid each peak is assigned to.
+    vector<vector<double>> pairwise_distance_matrix;
+    double configuration_cost = 0;
+    for (int i=0; i < peaks.size(); i++){ //initialize the pairwise distance matrix
+        vector<double> temp;
+        for (int j=0; j < peaks.size(); j++){
+            temp.push_back(0);
+        }
+        pairwise_distance_matrix.push_back(temp);
+    }
+    //choose k different intervals at random as the initial medoids
+        //generate k random indeces
+    vector<int> shuffled;
+    for (int i=0;i<peaks.size();i++){ //unshuffled medoid indeces
+        shuffled.push_back(i);
+        medoid_assignments.push_back(0); //all peaks are temporarily assigned to the first medoid
+    }
+    std::shuffle(shuffled.begin(),shuffled.end(),std::default_random_engine(seed)); //not tested, need to connect the seed
+    for (int i=0;i<k;i++){
+        medoid_indeces.push_back(shuffled[i]); //save the k randomly selected medoid indeces to a list
+    }
+    //compute the pairwise distance matrix
+    for (int i=0;i < peaks.size();i++) { //for each peak
+        for (int j=0; j < peaks.size(); j++) { //for each peak
+            pairwise_distance_matrix[i][j] = interval_distance(peaks[i], peaks[j]);
+        }
+    }
+    double current_cost = 0; //cost of the current clustering configuration
+    //assign each interval to its closest medoid
+    for (int i=0; i < peaks.size();i++){ //for each peak
+        for (int j=1; j<k; j++){ //for each medoid index
+            if(pairwise_distance_matrix[i][medoid_indeces[j]] < pairwise_distance_matrix[i][medoid_indeces[medoid_assignments[i]]]){
+                medoid_assignments[i] = j;
+            }
+        }
+    }
+    //compute full configuration cost
+    for (int i=0; i<medoid_assignments.size(); i++){
+        configuration_cost += pairwise_distance_matrix[i][medoid_indeces[medoid_assignments[i]]];
+    }
+
+    while (swaps) { //Veroni descent
+        swaps = false;
+        //assign each interval number to its closest medoid (already done for the first iteration)
+        for (int i=0; i < peaks.size();i++){
+            for (int j=1; j<k; j++){
+                if(pairwise_distance_matrix[i][medoid_indeces[j]] < pairwise_distance_matrix[i][medoid_assignments[i]]){
+                    //configuration_cost -= pairwise_distance_matrix[i][medoid_indeces[medoid_assignments[i]]]; //update the configuration cost
+                    medoid_assignments[i] = j; //update the medoid assignment with the index of the new medoid
+                    //configuration_cost += pairwise_distance_matrix[i][medoid_indeces[medoid_assignments[i]]];
+                }
+            }
+        }
+        //for each cluster
+        for (int p=0; p < k; p++){
+            //test each object within the cluster as the new medoid of the cluster
+            for (int i=0; i < peaks.size(); i++){
+                if (medoid_assignments[i] == p && i != medoid_indeces[p]){ //if the medoid is in the currently considered group, but is not the current medoid
+                    //determine swap cost
+                    double costA = 0, costB=0;
+                    for (int j=0; j < peaks.size(); j++){
+                        if (medoid_assignments[i] == p) { //if element is in the currently considered cluster
+                            costA += pairwise_distance_matrix[medoid_indeces[medoid_assignments[i]]][j]; //current configuration
+                            costB += pairwise_distance_matrix[i][j]; //currently considered swap
+                        }
+                        if (costB < costA){ //swap would reduce the configuration cost
+                            //update the configuration cost
+                            configuration_cost -= costA;
+                            configuration_cost += costB;
+                            //update medoid_indeces
+                            medoid_indeces[p] = i;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //tally the final clustering
+    clustering = medoid_indeces;
+    return configuration_cost;
+}
+
+double Simulation::compute_configuration_cost(vector<vector<double>> &pairwise_distance_matrix,
+                                              vector<int> medoid_indeces) {
+    double configuration_cost = 0;
+    for (int i=0; i<pairwise_distance_matrix.size(); i++){
+        for (int j=0; j<medoid_indeces.size();j++) {
+            configuration_cost += pairwise_distance_matrix[i][medoid_indeces[j]];
+        }
+    }
+    return configuration_cost;
+}
+
+double Simulation::interval_distance(const Loci &A, const Loci &B){
+    double term1 = pow((A.start_pos+A.end_pos)/2.-(B.start_pos+B.end_pos)/2.,2);
+    double term2 = pow((A.end_pos-A.start_pos)/2.-(B.end_pos-B.start_pos)/2.,2)/3.;
+    return term1+term2;
+}
+
 void Simulation::write_wigfile(Gene* gene, std::vector<double>* signal){
     //open stringstream
     std::stringstream ss;
@@ -120,6 +243,44 @@ void Simulation::write_wigfile(Gene* gene, std::vector<double>* signal){
     }
     //write stringstream to file
     outfile << ss.rdbuf();
+}
+
+void Simulation::read_bedfile(ifstream &bedinput, vector<Loci> &peaks){
+    Loci temp;
+    long int pos;
+    char buffer[1000];
+    string strbuff;
+    if (!bedinput.is_open()){
+        //throw exception
+    }
+    while(bedinput.getline(buffer,1000)){
+        strbuff = std::string(buffer);
+        //need to deal with lines that do not contain a bed entry here
+
+        //parse out chromosome name
+        pos = strbuff.find('\t');
+        temp.chromosome = strbuff.substr(0,pos); //need to handle non-numeric chromosome names as well
+        strbuff = strbuff.substr(pos+1,strbuff.length());
+        //parse out start position of the entry
+        pos = strbuff.find('\t');
+        temp.start_pos = stol(strbuff.substr(0,pos));
+        strbuff = strbuff.substr(pos+1,strbuff.length());
+        //parse out end position of the entry
+        pos = strbuff.find('\t');
+        temp.end_pos = stol(strbuff.substr(0,pos));
+        strbuff = strbuff.substr(pos+1,strbuff.length());
+        //discard the next two columns (may need to be made more flexible in the future)
+        pos = strbuff.find('\t');
+        strbuff = strbuff.substr(pos+1,strbuff.length());
+        pos = strbuff.find('\t');
+        strbuff = strbuff.substr(pos+1,strbuff.length());
+        //parse out the strand
+        pos = strbuff.find('\t');
+        temp.strand = strbuff.substr(0,pos);
+        strbuff = strbuff.substr(pos+1,strbuff.length());
+        //save to the peaks vector
+        peaks.push_back(temp);
+    }
 }
 
 void Simulation::write_bedfile(Gene* gene, vector<Loci>& peaks){
@@ -157,18 +318,20 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         //throw exception
     }
     //do while !eof
-    while(eof == false){
+    while(eof == false) {
         //allocate new gene
-        Gene* this_gene = new Gene();
+        Gene *this_gene = new Gene();
         this_gene->windower.set_min_window_size(minlength);
         //read gene
         eof = this_gene->read_gene(infile);
         cout << "processing gene: " << this_gene->getName() << "...";
         //compute structures using models
-        if (complement_flag)
+        if (complement_flag) {
             this_gene->complement_sequence();
-        if (reverse_flag)
-            this_gene->invert_sequence();
+        }
+        if (reverse_flag) {
+        this_gene->invert_sequence();
+        }
         this_gene->compute_structures(*models[0]);
 
         //ensemble analysis, free energies and boltzmann factors have already been computed in compute_structures
@@ -193,7 +356,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         }
         vector<double>* signal = NULL;
         vector<Loci> peaks;
-        compute_signal_bpprobs(*this_gene, signal);
+        compute_signal_bpprobs(*this_gene,signal);
         write_wigfile(this_gene,signal);
         //call peaks
         if (outfile2.is_open()){
@@ -297,6 +460,15 @@ void Simulation::simulation_C(float superhelicity){
 }
 
 void Simulation::sandbox(){ //test/debug environment
+
+    srand(454); //needs to be an argument
+    ifstream test("test.bed",ios::in);
+    vector<Loci> testvector, clustered_peaks;
+    read_bedfile(test,testvector);
+    cluster_k_intervals(testvector,clustered_peaks);
+    /*
+     * Craig's graph function is here. needs to be migrated elsewhere so sandbox can continue being used as a test function.
+     *
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::sandbox");
     }
@@ -346,7 +518,6 @@ void Simulation::sandbox(){ //test/debug environment
                 last_direction = 'd';
             }
                 //if the {(R-loop) is < 50% - tol
-            /*else if (partition_function/(partition_function+modelA.ground_state_factor()) < .5-tolerance){
                 //adjust supercoiling up
                 if (last_direction == 'd'){
                     //overshot the target and outside the error tolerance
@@ -354,7 +525,7 @@ void Simulation::sandbox(){ //test/debug environment
                 }
                 supercoiling += step_size;
                 last_direction = 'u';
-            }*/
+            } //end comment block here
             else { //hit target within tolerance
                 cout << "complete" << endl;
                 x.push_back(bp_energy);
@@ -370,5 +541,5 @@ void Simulation::sandbox(){ //test/debug environment
         ss << x[i] << ' ' << y[i] << endl;
     }
     outfile << ss.rdbuf();
-    outfile.close();
+    outfile.close();*/
 }

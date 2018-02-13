@@ -31,10 +31,10 @@ void Gene::parse_header(){
     remaining = remaining.substr(pos+1, remaining.length());
     //extract the start and stop locations
     pos = remaining.find("-");
-    position.start_pos = stoi(remaining.substr(0,pos));
+    position.start_pos = stol(remaining.substr(0,pos));
     remaining = remaining.substr(pos+1, remaining.length());
     pos = remaining.find(" ");
-    position.end_pos = stoi(remaining.substr(0,pos));
+    position.end_pos = stol(remaining.substr(0,pos));
     remaining = remaining.substr(pos+1, remaining.length());
     pos = remaining.find("STRAND=");
     remaining = remaining.substr(pos+7, remaining.length());

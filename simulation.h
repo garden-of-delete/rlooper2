@@ -4,6 +4,10 @@
 
 #ifndef RLOOPER2_SIMULATION_H
 #include "Rloop_equilibrium_model.h"
+#include <algorithm>
+#include <array>
+#include <random>
+#include <chrono>
 #import "exception_handling.h"
 #import <sstream>
 #import <cstdlib>
@@ -20,6 +24,7 @@ private:
     bool complement_flag;
     //member functions
     void compute_signal_bpprobs(Gene &gene, vector<double> *&signal);
+    void compute_signal_2(Gene &gene, vector<double> *&signal); //placeholder
     void call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks);
     /**
      * writes a given signal for a given gene to the outfile in .wig format
@@ -27,8 +32,19 @@ private:
      * @param   signal  the signal to be written to wigfile
      *
      */
+    //clustering functions
+    void cluster_k_intervals(vector<Loci>& peaks, vector<Loci>& clustered_peaks);
+    double lloyds_algorithm(vector<Loci>& peaks, vector<int>& clustering, int k, unsigned seed);
+    /**
+     * computes the distance metric between two interval numbers given in Guo et. al. 2014
+     * @param A the firt interval number represented as a Loci object
+     * @param B the second interval number represented as a Loci object
+     * @return the distance between A and B
+     */
+    double compute_configuration_cost(vector<vector<double>>& pairwise_distance_matrix, vector<int> medoid_indeces);
+    double interval_distance(const Loci &A, const Loci &B);
     void write_wigfile(Gene* gene, std::vector<double>* signal);
-
+    void read_bedfile(ifstream& bedinput, vector<Loci>& peaks);
     void write_bedfile(Gene* gene, vector<Loci>& peaks);
 
 public:
