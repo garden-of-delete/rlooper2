@@ -39,6 +39,10 @@ int main(int argc, char* argv[]) {
             sim.set_outfile2(argv[i+1]);
             i++;
         }
+        else if (!strcmp(argv[i], "--sensitivity")) {
+            sim.set_power_threshold(atoi(argv[i+1]));
+            i++;
+        }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;
             exit(1);

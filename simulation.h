@@ -19,7 +19,7 @@ private:
     std::vector<Gene*> genes;
     ifstream infile;
     ofstream outfile, outfile2; //primary and secondary ofstreams
-    int minlength; //a minimum loop length to be applied simulation-wide.
+    int minlength, power_threshold; //a minimum loop length to be applied simulation-wide.
     bool reverse_flag;
     bool complement_flag;
     //member functions
@@ -56,6 +56,7 @@ public:
     void set_outfile(string outfilename);
     void set_outfile2(string outfilename);
     void set_minlength(int Minlength);
+    void set_power_threshold(int Power_threshold);
     void reverse_input();
     void complement_input();
     std::vector<Model*> get_models();

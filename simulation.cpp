@@ -9,9 +9,10 @@ void initialize_models(char* model){
 
 Simulation::Simulation(){
     //default constructor
-    minlength = 20; //default minlength
+    minlength = 2; //default minlength
     reverse_flag = false;
     complement_flag = false;
+    power_threshold = 1;
 }
 
 Simulation::~Simulation(){
@@ -36,6 +37,10 @@ void Simulation::set_outfile2(string outfilename){
 
 void Simulation::set_minlength(int Minlength){
     minlength = Minlength;
+}
+
+void Simulation::set_power_threshold(int Power_threshold){
+    power_threshold = Power_threshold;
 }
 
 void Simulation::reverse_input(){
@@ -73,7 +78,7 @@ void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
 }
 
 void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks){
-    int power_threshold = 12; //needs to be made a class variable
+    //int power_threshold = 12; //needs to be made a class variable
     double minimum = 1;
     bool in_peak = false;
     long peak_start=0, peak_end=0;
