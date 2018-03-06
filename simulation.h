@@ -18,13 +18,15 @@ private:
     std::vector<Model*> models;
     std::vector<Gene*> genes;
     ifstream infile;
-    ofstream outfile, outfile2; //primary and secondary ofstreams
+    string outfilename;
     int minlength, power_threshold; //a minimum loop length to be applied simulation-wide.
     bool reverse_flag;
     bool complement_flag;
+    bool bedfile;
     //member functions
     void compute_signal_bpprobs(Gene &gene, vector<double> *&signal);
-    void compute_signal_2(Gene &gene, vector<double> *&signal); //placeholder
+    void compute_signal_average_G(Gene &gene, vector<double> *&signal);
+    void compute_signal_mfe(Gene &gene, vector<double> *&signal);
     void call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks);
     /**
      * writes a given signal for a given gene to the outfile in .wig format
@@ -43,9 +45,11 @@ private:
      */
     double compute_configuration_cost(vector<vector<double>>& pairwise_distance_matrix, vector<int> medoid_indeces);
     double interval_distance(const Loci &A, const Loci &B);
-    void write_wigfile(Gene* gene, std::vector<double>* signal);
+    void write_wigfile_header(ofstream& outfile, string trackname);
+    void write_wigfile(ofstream& outfile, Gene* gene, std::vector<double>* signal);
     void read_bedfile(ifstream& bedinput, vector<Loci>& peaks);
-    void write_bedfile(Gene* gene, vector<Loci>& peaks);
+    void write_bedfile_header(ofstream& outfile, string trackname);
+    void write_bedfile(ofstream& outfile, Gene* gene, vector<Loci>& peaks);
 
 public:
     Simulation();
@@ -54,7 +58,7 @@ public:
     //getters and setters
     void set_infile(string infilename);
     void set_outfile(string outfilename);
-    void set_outfile2(string outfilename);
+    void set_bedfile(bool value);
     void set_minlength(int Minlength);
     void set_power_threshold(int Power_threshold);
     void reverse_input();

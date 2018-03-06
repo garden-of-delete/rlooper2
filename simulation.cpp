@@ -19,24 +19,22 @@ Simulation::~Simulation(){
     for(std::vector<Gene*>::iterator it = genes.begin(); std::distance(genes.begin(),it) < genes.size(); ++it){
         delete *it; //need to test this destructor
     }
-    outfile.close();
-    outfile2.close();
 }
 
 void Simulation::set_infile(string infilename){
     infile.open(infilename, ios::in);
 }
 
-void Simulation::set_outfile(string outfilename){
-    outfile.open(outfilename, ios::out);
-}
-
-void Simulation::set_outfile2(string outfilename){
-    outfile2.open(outfilename, ios::out);
+void Simulation::set_outfile(string Outfilename){
+    outfilename = Outfilename;
 }
 
 void Simulation::set_minlength(int Minlength){
     minlength = Minlength;
+}
+
+void Simulation::set_bedfile(bool value){
+    bedfile = value;
 }
 
 void Simulation::set_power_threshold(int Power_threshold){
@@ -61,7 +59,7 @@ void Simulation::add_model(Model& model){
 
 void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
     signal = new vector<double>(gene.get_length(), 0.0);
-    //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
+    //compute the r-loop involvement probability for each base
     //for each structure in the gene
     for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
          it < gene.getStructures()[0]->end(); ++it) {
@@ -76,6 +74,56 @@ void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
         std::reverse(signal->begin(), signal->end());
     }
 }
+
+void Simulation::compute_signal_average_G(Gene &gene, vector<double> *&signal){
+    signal = new vector<double>(gene.get_length(), 0.0);
+    //compute the special partition function for each base-pair
+    vector<double> bp_partition_functions(gene.get_length(), 0.0);
+    //for each structure in the gene
+    for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
+         it < gene.getStructures()[0]->end(); ++it) {
+        //for each base in the structure
+        for (long int i = it->position.start_pos - gene.getPosition().start_pos;
+             i < it->position.end_pos - gene.getPosition().start_pos; i++) {
+            bp_partition_functions[i] += it->boltzmann_factor;
+        }
+    }
+    //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
+    //for each structure in the gene
+    for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
+         it < gene.getStructures()[0]->end(); ++it) {
+        //for each base in the structure
+        for (long int i = it->position.start_pos - gene.getPosition().start_pos;
+             i < it->position.end_pos - gene.getPosition().start_pos; i++) {
+            (*signal)[i] += (it->boltzmann_factor/bp_partition_functions[i])*it->free_energy;
+        }
+    }
+    //if strand is -, reverse bp_probabilities
+    if (gene.getPosition().strand == "-") {
+        std::reverse(signal->begin(), signal->end());
+    }
+}
+
+void Simulation::compute_signal_mfe(Gene &gene, vector<double> *&signal){
+    signal = new vector<double>(gene.get_length(), 0.0);
+    double current_min = MAXFLOAT;
+    Structure mfe;
+    //for each structure in the gene
+    for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
+         it < gene.getStructures()[0]->end(); ++it) {
+        if (it->free_energy < current_min){
+            current_min = it->free_energy;
+            mfe = *it;
+        }
+    }
+    //record the position of the mfe into the signal
+    for (long int i = mfe.position.start_pos - gene.getPosition().start_pos;
+         i < mfe.position.end_pos - gene.getPosition().start_pos; i++) {
+        (*signal)[i] = 1.0;
+    }
+
+}
+
 
 void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks){
     //int power_threshold = 12; //needs to be made a class variable
@@ -230,7 +278,17 @@ double Simulation::interval_distance(const Loci &A, const Loci &B){
     return term1+term2;
 }
 
-void Simulation::write_wigfile(Gene* gene, std::vector<double>* signal){
+void Simulation::write_wigfile_header(ofstream& outfile, string trackname){
+    //open stringstream
+    std::stringstream ss;
+    //compose .wig header
+    //adjust browser position
+    ss << "track type=wiggle_0 name=\"" << trackname << "\" visibility=full autoscale=off color=50,150,255 priority=10"
+       << endl;
+    outfile << ss.rdbuf();
+}
+
+void Simulation::write_wigfile(ofstream& outfile, Gene* gene, std::vector<double>* signal){
     //open stringstream
     std::stringstream ss;
     string wigfile_name = gene->getHeader().c_str();
@@ -239,8 +297,6 @@ void Simulation::write_wigfile(Gene* gene, std::vector<double>* signal){
     //adjust browser position
     ss << "browser position " << gene->getPosition().chromosome << ':' << gene->getPosition().start_pos << '-' <<
        gene->getPosition().end_pos << endl;
-    ss << "track type=wiggle_0 name=\"" << name << "\" visibility=full autoscale=off color=50,150,255 priority=10"
-       << endl;
     ss << "fixedStep chrom=" << gene->getPosition().chromosome << " start=" << gene->getPosition().start_pos << " step=1"
        << endl;
     for (int i = 0; i < signal->size(); i++) {
@@ -288,12 +344,18 @@ void Simulation::read_bedfile(ifstream &bedinput, vector<Loci> &peaks){
     }
 }
 
-void Simulation::write_bedfile(Gene* gene, vector<Loci>& peaks){
+void Simulation::write_bedfile_header(ofstream& outfile, string trackname){
+    //write bedfile
+    stringstream ss;
+    ss << "track name=rLooper description=\""<<trackname<<"\" useScore=1" << endl;
+    outfile << ss.rdbuf();
+}
+
+void Simulation::write_bedfile(ofstream& outfile, Gene* gene, vector<Loci>& peaks){
     //write bedfile
     stringstream ss;
     string strand_name;
     int start_pos=0, end_pos=0;
-
     if (gene->getPosition().strand == "+"){
         strand_name = "POS";
     }
@@ -302,7 +364,6 @@ void Simulation::write_bedfile(Gene* gene, vector<Loci>& peaks){
     }
     ss << "browser position " << gene->getPosition().chromosome << ':' << gene->getPosition().start_pos << '-' <<
        gene->getPosition().end_pos << endl;
-    ss << "track name=rLooper description=\""<< gene->getName()<<"\" useScore=1" << endl;
     //print BED header here
     //print the peaks in BED format
     for (int i=0; i < peaks.size(); i++){
@@ -310,7 +371,7 @@ void Simulation::write_bedfile(Gene* gene, vector<Loci>& peaks){
            << '\t' << strand_name << i << '\t' << '0' << '\t' << peaks[i].strand << endl;
     }
     //write stringstream to file
-    outfile2 << ss.rdbuf();
+    outfile << ss.rdbuf();
 }
 
 void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
@@ -318,6 +379,15 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::simulation_A");
     }
+    ofstream outfile1(outfilename+"_bpprob.wig",ios::out);
+    ofstream outfile2(outfilename+"_avgG.wig",ios::out);
+    ofstream outfile3(outfilename+"_mfe.wig",ios::out);
+    ofstream outfile4(outfilename+"_bpprob.bed",ios::out);
+    //write headers
+    write_wigfile_header(outfile1,"signal1");
+    write_wigfile_header(outfile2,"signal2");
+    write_wigfile_header(outfile3,"signal3");
+    write_bedfile_header(outfile4,"signal1_peaks");
     bool eof = false;
     if (models.size() < 1){
         //throw exception
@@ -357,17 +427,22 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         sanity_check += models[0]->ground_state_factor()/partition_function;
         double test = fabs(1-sanity_check);
         if (fabs(1-sanity_check) > .00001){
-            throw SimulationException("Probsum != 1"); //this throw is uncaught
+            throw SimulationException("Ensemble probability sum != 1"); //this throw is uncaught
         }
-        vector<double>* signal = NULL;
+        //compute signals and output .wig tracks
+        vector<double>* signal = NULL, *signal2 = NULL, *signal3 = NULL;
         vector<Loci> peaks;
         compute_signal_bpprobs(*this_gene,signal);
-        write_wigfile(this_gene,signal);
-        //call peaks
-        if (outfile2.is_open()){
+        compute_signal_average_G(*this_gene,signal2);
+        compute_signal_mfe(*this_gene,signal3);
+        write_wigfile(outfile1,this_gene,signal);
+        write_wigfile(outfile2,this_gene,signal2);
+        write_wigfile(outfile3,this_gene,signal3);
+        //call peaks and write results to .bed files
+        if (bedfile){ //need a different condition here
             call_peaks_threshold(*this_gene,*signal,peaks); //possible null pointer exception generated here
             //write to bedfile
-            write_bedfile(this_gene,peaks);
+            write_bedfile(outfile4,this_gene,peaks);
         }
         cout << "complete!" << endl;
         delete signal;
@@ -377,10 +452,15 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         //store the gene in the genes vector
         genes.push_back(this_gene);
     }
+    outfile1.close();
+    outfile2.close();
+    outfile3.close();
+    outfile4.close();
 }
 
 //computes P(R-Loop) for the provided supercoiling value
 void Simulation::simulation_B(float superhelicity){
+    ofstream outfile(outfilename,ios::out);
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::simulation_B");
     }
@@ -419,9 +499,11 @@ void Simulation::simulation_B(float superhelicity){
     p_rloop = 1 - (ground_state_factor/partition_function);
     //display result
     outfile << superhelicity << ' ' << p_rloop << endl;
+    outfile.close();
 }
 
 void Simulation::simulation_C(float superhelicity){
+    ofstream outfile(outfilename,ios::out);
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::simulation_C");
     }
@@ -445,7 +527,7 @@ void Simulation::simulation_C(float superhelicity){
     //determine P(ground state)
     long double partition_function = 0;
     long double ground_state_factor = 0;
-    int index  = this_gene->getStructures().size();
+    unsigned long index = this_gene->getStructures().size();
     int count = 0;
     for (vector<Structure>::iterator it = this_gene->getStructures()[index-1]->begin();
          it < this_gene->getStructures()[index-1]->end(); ++it){
@@ -462,6 +544,7 @@ void Simulation::simulation_C(float superhelicity){
     }
     //display result
     outfile << superhelicity << ' ' << expected_length << endl;
+    outfile.close();
 }
 
 void Simulation::sandbox(){ //test/debug environment

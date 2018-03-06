@@ -36,8 +36,7 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         else if (!strcmp(argv[i], "--bedfile")) {
-            sim.set_outfile2(argv[i+1]);
-            i++;
+            sim.set_bedfile(true);
         }
         else if (!strcmp(argv[i], "--sensitivity")) {
             sim.set_power_threshold(atoi(argv[i+1]));
