@@ -1,7 +1,7 @@
 //
 // Created by Robert Stolz on 6/28/17.
 //
-#import "simulation.h"
+#include "simulation.h"
 
 void initialize_models(char* model){
 
@@ -156,7 +156,7 @@ void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector
 }
 
 void Simulation::cluster_k_intervals(vector<Loci> &peaks, vector<Loci> &clustered_peaks){
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    long long int seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::cout << "rng seed: " << seed << endl;
     vector<double> costs;
     vector<int> chosen_peaks;
@@ -384,10 +384,10 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     ofstream outfile3(outfilename+"_mfe.wig",ios::out);
     ofstream outfile4(outfilename+"_bpprob.bed",ios::out);
     //write headers
-    write_wigfile_header(outfile1,"signal1");
-    write_wigfile_header(outfile2,"signal2");
-    write_wigfile_header(outfile3,"signal3");
-    write_bedfile_header(outfile4,"signal1_peaks");
+    write_wigfile_header(outfile1,"signal1_"+outfilename);
+    write_wigfile_header(outfile2,"signal2_"+outfilename);
+    write_wigfile_header(outfile3,"signal3_"+outfilename);
+    write_bedfile_header(outfile4,"signal1_peaks_"+outfilename);
     bool eof = false;
     if (models.size() < 1){
         //throw exception
