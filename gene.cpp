@@ -178,6 +178,31 @@ void Gene::compute_structures(Model &model){
     structures.push_back(these_structures);
 }
 
+void Gene::compute_boundary_structures(Model &model){
+    std::vector<Structure>* these_structures = new vector<Structure>;
+    if (sequence.size() == 0){
+        //throw exception
+    }
+    //initializing the iterators ensures that the intial comparison in next_window_from_all_windows is not problematic
+    std::vector<char>::iterator start = sequence.begin(),stop=sequence.begin()+1;
+    windower.reset_window();
+    while (windower.has_next_window()){
+        windower.next_window_from_all_windows(start,stop); //do I want the model to be able to decide it needs a different windowing scheme?
+        Structure temp;
+        //set the Loci of the structure using the gene's Loci
+        temp.position.chromosome = position.chromosome;
+        temp.position.strand = position.strand;
+        temp.position.start_pos = position.start_pos + windower.get_current_start_offset();
+        temp.position.end_pos = position.start_pos + windower.get_current_stop_offset();
+        //pass the structure and window boundaries to the model
+        model.compute_structure(start,stop,temp);
+        //push the now computed structure onto these_structures
+        these_structures->push_back(temp); //need to make sure the default copy constructor is working properly
+    }
+    //windower.print_current_window(); //DEBUG
+    structures.push_back(these_structures);
+}
+
 void Gene::clear_structures(){
     for (auto it = structures.begin(); it != structures.end(); ++it ){
         delete *it;

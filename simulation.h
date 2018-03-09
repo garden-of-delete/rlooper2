@@ -12,6 +12,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <cmath>
+#include "float.h"
 
 class Simulation{
 private:

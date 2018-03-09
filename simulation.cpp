@@ -106,7 +106,7 @@ void Simulation::compute_signal_average_G(Gene &gene, vector<double> *&signal){
 
 void Simulation::compute_signal_mfe(Gene &gene, vector<double> *&signal){
     signal = new vector<double>(gene.get_length(), 0.0);
-    double current_min = MAXFLOAT;
+    double current_min = FLT_MAX;
     Structure mfe;
     //for each structure in the gene
     for (std::vector<Structure>::iterator it = gene.getStructures()[0]->begin();
@@ -401,6 +401,12 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         eof = this_gene->read_gene(infile);
         cout << "processing gene: " << this_gene->getName() << "...";
         //compute structures using models
+        if (this_gene->getPosition().strand == "+") {
+            this_gene->complement_sequence();
+        }
+        else if(this_gene->getPosition().strand == "-") {
+            this_gene->invert_sequence();
+        }
         if (complement_flag) {
             this_gene->complement_sequence();
         }
