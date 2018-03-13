@@ -4,12 +4,13 @@
 
 #include "windower.h"
 
-Windower::Windower(): min_window_size(20) {};
+Windower::Windower(): min_window_size(2) {};
 
 Windower::Windower(std::vector<char> &target_sequence){
     current_sequence = &target_sequence;
     current_start = target_sequence.begin();
     current_stop = current_start + min_window_size-1;
+    circular = false;
 }
 
 int Windower::get_min_window_size(){
@@ -21,6 +22,14 @@ void Windower::set_min_window_size(int size){
         throw WindowerException();
     }
     min_window_size = size;
+}
+
+bool Windower::get_circular(){
+    return circular;
+}
+
+void Windower::set_circular(bool value){
+    circular = value;
 }
 
 void Windower::set_sequence(std::vector<char>& target_sequence){ //not working?

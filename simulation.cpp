@@ -98,7 +98,7 @@ void Simulation::compute_signal_average_G(Gene &gene, vector<double> *&signal){
             (*signal)[i] += (it->boltzmann_factor/bp_partition_functions[i])*it->free_energy;
         }
     }
-    //if strand is -, reverse bp_probabilities
+    //if strand is -, reverse signal
     if (gene.getPosition().strand == "-") {
         std::reverse(signal->begin(), signal->end());
     }
@@ -121,7 +121,10 @@ void Simulation::compute_signal_mfe(Gene &gene, vector<double> *&signal){
          i < mfe.position.end_pos - gene.getPosition().start_pos; i++) {
         (*signal)[i] = 1.0;
     }
-
+    //if strand is -, reverse signal
+    if (gene.getPosition().strand == "-") {
+        std::reverse(signal->begin(), signal->end());
+    }
 }
 
 
@@ -383,11 +386,15 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     ofstream outfile2(outfilename+"_avgG.wig",ios::out);
     ofstream outfile3(outfilename+"_mfe.wig",ios::out);
     ofstream outfile4(outfilename+"_bpprob.bed",ios::out);
+    ofstream outfile6(outfilename+"_mfe.bed",ios::out);
+
     //write headers
     write_wigfile_header(outfile1,"signal1_"+outfilename);
     write_wigfile_header(outfile2,"signal2_"+outfilename);
     write_wigfile_header(outfile3,"signal3_"+outfilename);
     write_bedfile_header(outfile4,"signal1_peaks_"+outfilename);
+    write_bedfile_header(outfile6,"signal3_peaks_"+outfilename);
+
     bool eof = false;
     if (models.size() < 1){
         //throw exception
@@ -445,10 +452,14 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         write_wigfile(outfile2,this_gene,signal2);
         write_wigfile(outfile3,this_gene,signal3);
         //call peaks and write results to .bed files
-        if (bedfile){ //need a different condition here
+        if (bedfile){
             call_peaks_threshold(*this_gene,*signal,peaks); //possible null pointer exception generated here
             //write to bedfile
             write_bedfile(outfile4,this_gene,peaks);
+            peaks.clear();
+            call_peaks_threshold(*this_gene,*signal3,peaks); //possible null pointer exception generated here
+            //write to bedfile
+            write_bedfile(outfile6,this_gene,peaks);
         }
         cout << "complete!" << endl;
         delete signal;
@@ -553,17 +564,21 @@ void Simulation::simulation_C(float superhelicity){
     outfile.close();
 }
 
-void Simulation::sandbox(){ //test/debug environment
-
+void Simulation::sandbox() { //test/debug environment
+/*
     srand(454); //needs to be an argument
     ifstream test("test.bed",ios::in);
     vector<Loci> testvector, clustered_peaks;
     read_bedfile(test,testvector);
     cluster_k_intervals(testvector,clustered_peaks);
+*/
     /*
      * Craig's graph function is here. needs to be migrated elsewhere so sandbox can continue being used as a test function.
      *
-    if (!infile.is_open()){
+     * */
+
+    ofstream outfile(outfilename, ios::out);
+    if (!infile.is_open()) {
         throw UnexpectedClosedFileException("Simulation::sandbox");
     }
     Gene geneA;
@@ -583,10 +598,10 @@ void Simulation::sandbox(){ //test/debug environment
     //modelA.setMinimum_loop_length(minlength); //not functional, needs to be removed
     geneA.windower.set_min_window_size(minlength);
     //for each base pairing energy
-    for (double bp_energy = lower_bound; bp_energy <= upper_bound; bp_energy += 0.1){
+    for (double bp_energy = lower_bound; bp_energy <= upper_bound; bp_energy += 0.01) {
         //for each level of supercoiling
         supercoiling = last_supercoiling;
-        while(true) {
+        while (true) {
             cout << "For bp_energy: " << bp_energy << ", and supercoiling: " << supercoiling << endl;
             //set supercoiling
             modelA.set_superhelicity(supercoiling);
@@ -597,29 +612,31 @@ void Simulation::sandbox(){ //test/debug environment
             geneA.compute_structures(modelA);
             //sum the probabilities of all R-loop structures
             double partition_function = 0;
-            for (vector<Structure>::iterator it = geneA.getStructures()[0]->begin(); it != geneA.getStructures()[0]->end(); ++it){
+            for (vector<Structure>::iterator it = geneA.getStructures()[0]->begin();
+                 it != geneA.getStructures()[0]->end(); ++it) {
                 partition_function += it.base()->boltzmann_factor;
             }
             //compare to the partition function
             // if the P(R-loop) is > 50% + tol
-            if (partition_function/(partition_function+modelA.ground_state_factor()) < .5){
+            if (partition_function / (partition_function + modelA.ground_state_factor()) < .5) {
                 //adjust supercoiling down
-                if (last_direction == 'u'){
-                    //overshot the target and outside the error tolerance
-                    step_size /= 0.5; //cut step size in half
-                }
-                supercoiling -= step_size;
-                last_direction = 'd';
-            }
-                //if the {(R-loop) is < 50% - tol
-                //adjust supercoiling up
-                if (last_direction == 'd'){
+                if (last_direction == 'd') {
                     //overshot the target and outside the error tolerance
                     step_size /= 0.5; //cut step size in half
                 }
                 supercoiling += step_size;
                 last_direction = 'u';
-            } //end comment block here
+            }
+                //if the {(R-loop) is < 50% - tol
+                //adjust supercoiling up
+                /*
+                    if (last_direction == 'd'){
+                        //overshot the target and outside the error tolerance
+                        step_size /= 0.5; //cut step size in half
+                    }
+                    supercoiling += step_size;
+                    last_direction = 'u';
+                } *///end comment block here
             else { //hit target within tolerance
                 cout << "complete" << endl;
                 x.push_back(bp_energy);
@@ -631,9 +648,9 @@ void Simulation::sandbox(){ //test/debug environment
     }
     //write result
     stringstream ss;
-    for (int i=0; i < x.size(); i++){
+    for (int i = 0; i < x.size(); i++) {
         ss << x[i] << ' ' << y[i] << endl;
+        outfile << ss.rdbuf();
     }
-    outfile << ss.rdbuf();
-    outfile.close();*/
+    outfile.close();
 }

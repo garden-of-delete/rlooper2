@@ -12,12 +12,17 @@
 class Windower {
 private:
     int min_window_size; //must be at least 2
+    bool circular;
     std::vector<char>* current_sequence;
     std::vector<char>::iterator current_start, current_stop;
 public:
     //constructors
     Windower();
     Windower(std::vector<char> &sequence);
+
+    bool get_circular();
+
+    void set_circular(bool value);
 
     int get_min_window_size();
 
