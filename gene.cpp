@@ -45,7 +45,7 @@ void Gene::parse_header(){
 }
 //constructors and destructors
 Gene::Gene(){
-    windower.set_sequence(sequence);
+
 }
 
 Gene::~Gene(){
@@ -140,6 +140,7 @@ bool Gene::read_gene(ifstream& fastafile) { //need to test
             throw InvalidSequenceDataException(c);
         }
     }
+    windower.set_sequence(sequence);
     return true;
     //unexpected EOF
     //throw InvalidSequenceDataException();
@@ -154,6 +155,7 @@ void Gene::print_gene(){
 }
 
 void Gene::compute_structures(Model &model){
+    //check for circular sequence conditions
     std::vector<Structure>* these_structures = new vector<Structure>;
     if (sequence.size() == 0){
         //throw exception
@@ -162,7 +164,7 @@ void Gene::compute_structures(Model &model){
     std::vector<char>::iterator start = sequence.begin(),stop=sequence.begin()+1;
     windower.reset_window();
     while (windower.has_next_window()){
-        windower.next_window_from_all_windows(start,stop); //do I want the model to be able to decide it needs a different windowing scheme?
+        windower.next_window_from_all_windows(start,stop);
         Structure temp;
         //set the Loci of the structure using the gene's Loci
         temp.position.chromosome = position.chromosome;
@@ -174,11 +176,12 @@ void Gene::compute_structures(Model &model){
         //push the now computed structure onto these_structures
         these_structures->push_back(temp); //need to make sure the default copy constructor is working properly
     }
-    //windower.print_current_window(); //DEBUG
+    cout << these_structures->size() << endl;
     structures.push_back(these_structures);
 }
 
-void Gene::compute_boundary_structures(Model &model){
+void Gene::compute_structures_circular(Model &model){
+    //check for circular sequence conditions
     std::vector<Structure>* these_structures = new vector<Structure>;
     if (sequence.size() == 0){
         //throw exception
@@ -186,8 +189,8 @@ void Gene::compute_boundary_structures(Model &model){
     //initializing the iterators ensures that the intial comparison in next_window_from_all_windows is not problematic
     std::vector<char>::iterator start = sequence.begin(),stop=sequence.begin()+1;
     windower.reset_window();
-    while (windower.has_next_window()){
-        windower.next_window_from_all_windows(start,stop); //do I want the model to be able to decide it needs a different windowing scheme?
+    while (windower.has_next_window_circular()){
+        windower.next_window_from_all_windows_circular(start,stop);
         Structure temp;
         //set the Loci of the structure using the gene's Loci
         temp.position.chromosome = position.chromosome;
@@ -199,7 +202,7 @@ void Gene::compute_boundary_structures(Model &model){
         //push the now computed structure onto these_structures
         these_structures->push_back(temp); //need to make sure the default copy constructor is working properly
     }
-    //windower.print_current_window(); //DEBUG
+    cout << these_structures->size() << endl;
     structures.push_back(these_structures);
 }
 

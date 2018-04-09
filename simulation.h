@@ -24,6 +24,7 @@ private:
     bool reverse_flag;
     bool complement_flag;
     bool bedfile;
+    bool circular_flag;
     //member functions
     void compute_signal_bpprobs(Gene &gene, vector<double> *&signal);
     void compute_signal_average_G(Gene &gene, vector<double> *&signal);
@@ -62,6 +63,7 @@ public:
     void set_bedfile(bool value);
     void set_minlength(int Minlength);
     void set_power_threshold(int Power_threshold);
+    void set_circular();
     void reverse_input();
     void complement_input();
     std::vector<Model*> get_models();
@@ -76,13 +78,13 @@ public:
     /**
      * Computes P(R-Loop is on the sequence) for a given superhelicity level. Supports any number of models.
      */
-    void simulation_B(float superhelicity);
+    void simulation_B(float superhelicity, ofstream& outfile);
 
     /**
      * Computes expected length for the ensemble at the given superhelicity value
      * @param superhelicity
      */
-    void simulation_C(float superhelicity);
+    void simulation_C(float superhelicity, ofstream& outfile);
 
     /**
     * A test environmnet for debugging purposes

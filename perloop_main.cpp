@@ -62,9 +62,11 @@ int main(int argc, char* argv[]) {
     outer.clear();
     cout << outer.size() << ' ' << inner->size()<<endl;
 */
-        for (float superhelicity=supercoiling_lower_bound; superhelicity <= supercoiling_upper_bound+0.0001; superhelicity += 0.001){
+    ofstream outfile(argv[2],ios::out);
+    for (float superhelicity=supercoiling_lower_bound; superhelicity <= supercoiling_upper_bound+0.0001; superhelicity += 0.001){
             cout << superhelicity << endl;
-            sim.simulation_B(superhelicity);
+            sim.simulation_B(superhelicity,outfile);
         }
+    outfile.close();
     return 0;
 }

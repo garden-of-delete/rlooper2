@@ -11,22 +11,20 @@
 
 class Windower {
 private:
-    int min_window_size; //must be at least 2
-    bool circular;
+    int min_window_size, current_window_size, sequence_size; //must be at least 2
     std::vector<char>* current_sequence;
     std::vector<char>::iterator current_start, current_stop;
+    bool is_circular;
 public:
     //constructors
     Windower();
     Windower(std::vector<char> &sequence);
 
-    bool get_circular();
-
-    void set_circular(bool value);
-
     int get_min_window_size();
 
     void set_min_window_size(int size);
+
+    void set_circular(bool Is_circular);
 
     void set_sequence(std::vector<char>& sequence);
 
@@ -36,7 +34,11 @@ public:
      */
     bool has_next_window();
 
+    bool has_next_window_circular();
+
     void next_window_from_all_windows(std::vector<char>::iterator& start, std::vector<char>::iterator& stop);
+
+    void next_window_from_all_windows_circular(std::vector<char>::iterator& start, std::vector<char>::iterator& stop);
 
     bool next_sliding_window_length_n(std::vector<char>::iterator start, std::vector<char>::iterator stop);
 

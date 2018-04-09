@@ -4,13 +4,13 @@
 
 #include "windower.h"
 
-Windower::Windower(): min_window_size(2) {};
+Windower::Windower(): min_window_size(2), is_circular(false) {};
 
 Windower::Windower(std::vector<char> &target_sequence){
     current_sequence = &target_sequence;
     current_start = target_sequence.begin();
     current_stop = current_start + min_window_size-1;
-    circular = false;
+    is_circular = false;
 }
 
 int Windower::get_min_window_size(){
@@ -24,23 +24,32 @@ void Windower::set_min_window_size(int size){
     min_window_size = size;
 }
 
-bool Windower::get_circular(){
-    return circular;
-}
-
-void Windower::set_circular(bool value){
-    circular = value;
+void Windower::set_circular(bool Is_circular){
+    is_circular = Is_circular;
 }
 
 void Windower::set_sequence(std::vector<char>& target_sequence){ //not working?
     current_sequence = &target_sequence;
     current_start = target_sequence.begin();
     current_stop = current_start + min_window_size - 2;
+    sequence_size = current_sequence->size();
 }
 
 bool Windower::has_next_window(){
     //if the last window has been reached
-    if (current_start == current_stop-min_window_size+1 && current_stop == current_sequence->end()-1){ //untested rs 7.11.17
+    if (is_circular){
+        return has_next_window_circular();
+    }
+    if (current_start == current_stop-min_window_size+1 && current_stop == current_sequence->end()-1){
+        return false;
+    }
+    else
+        return true;
+}
+
+bool Windower::has_next_window_circular(){
+    //if the last window has been reached
+    if (current_start == current_sequence->end()-1 && current_window_size == sequence_size){
         return false;
     }
     else
@@ -51,6 +60,9 @@ void Windower::next_window_from_all_windows(std::vector<char>::iterator& start, 
     //if (!has_next_window()){ //safety check to make sure the next window exists
     //    throw WindowerException(); //throw exception?
     //}
+    if (is_circular){
+        return next_window_from_all_windows_circular(start,stop);
+    }
     if (stop < current_sequence->end()-1){
         ++current_stop;
     }
@@ -60,6 +72,31 @@ void Windower::next_window_from_all_windows(std::vector<char>::iterator& start, 
     }
     start = current_start;
     stop = current_stop;
+    //print_current_window();
+    return;
+}
+
+void Windower::next_window_from_all_windows_circular(std::vector<char>::iterator& start, std::vector<char>::iterator& stop){
+    //if (!has_next_window()){ //safety check to make sure the next window exists
+    //    throw WindowerException(); //throw exception?
+    //}
+    if (current_window_size < sequence_size){
+        if (current_stop == current_sequence->end()-1){ //boundary condition
+            current_stop = current_sequence->begin();
+        }
+        else{
+            ++current_stop;
+        }
+        current_window_size++;
+    }
+    else{ //if (start < current_sequence->end()-min_window_size){
+        ++current_start;
+        current_stop = current_start + min_window_size-1;
+        current_window_size = min_window_size;
+    }
+    start = current_start;
+    stop = current_stop;
+    //print_current_window();
     return;
 }
 
@@ -74,6 +111,7 @@ long int Windower::get_current_stop_offset(){
 void Windower::reset_window(){
     current_start = current_sequence->begin();
     current_stop = current_sequence->begin()+min_window_size - 2;
+    current_window_size = min_window_size-1;
 }
 
 void Windower::print_current_window(){
@@ -83,5 +121,6 @@ void Windower::print_current_window(){
         std::cout << *it;
         ++it;
     }
+    std::cout << *it;
     std::cout << '\n';
 }

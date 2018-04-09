@@ -45,8 +45,10 @@ int main(int argc, char* argv[]) {
     }
     //run simulation
     sim.add_model(model);
+    ofstream outfile(argv[2],ios::out);
     for (float superhelicity=supercoiling_lower_bound; superhelicity <= supercoiling_upper_bound+0.0001; superhelicity += 0.01){
-        sim.simulation_C(superhelicity);
+        sim.simulation_C(superhelicity,outfile);
     }
+    outfile.close();
     return 0;
 }

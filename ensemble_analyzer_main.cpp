@@ -38,6 +38,9 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[i], "--bedfile")) {
             sim.set_bedfile(true);
         }
+        else if (!strcmp(argv[i], "--circular")) {
+            sim.set_circular();
+        }
         else if (!strcmp(argv[i], "--sensitivity")) {
             sim.set_power_threshold(atoi(argv[i+1]));
             i++;

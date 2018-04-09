@@ -13,6 +13,7 @@ Simulation::Simulation(){
     reverse_flag = false;
     complement_flag = false;
     power_threshold = 1;
+    circular_flag = false;
 }
 
 Simulation::~Simulation(){
@@ -39,6 +40,10 @@ void Simulation::set_bedfile(bool value){
 
 void Simulation::set_power_threshold(int Power_threshold){
     power_threshold = Power_threshold;
+}
+
+void Simulation::set_circular(){
+    circular_flag = true;
 }
 
 void Simulation::reverse_input(){
@@ -409,7 +414,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         cout << "processing gene: " << this_gene->getName() << "...";
         //compute structures using models
         if (this_gene->getPosition().strand == "+") {
-            this_gene->complement_sequence();
+            //this_gene->complement_sequence();
         }
         else if(this_gene->getPosition().strand == "-") {
             this_gene->invert_sequence();
@@ -418,9 +423,14 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             this_gene->complement_sequence();
         }
         if (reverse_flag) {
-        this_gene->invert_sequence();
+            this_gene->invert_sequence();
         }
-        this_gene->compute_structures(*models[0]);
+        if (circular_flag) {
+            this_gene->compute_structures_circular(*models[0]);
+        }
+        else{
+            this_gene->compute_structures(*models[0]);
+        }
 
         //ensemble analysis, free energies and boltzmann factors have already been computed in compute_structures
         //compute partition function
@@ -476,8 +486,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
 }
 
 //computes P(R-Loop) for the provided supercoiling value
-void Simulation::simulation_B(float superhelicity){
-    ofstream outfile(outfilename,ios::out);
+void Simulation::simulation_B(float superhelicity, ofstream& outfile){
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::simulation_B");
     }
@@ -516,11 +525,9 @@ void Simulation::simulation_B(float superhelicity){
     p_rloop = 1 - (ground_state_factor/partition_function);
     //display result
     outfile << superhelicity << ' ' << p_rloop << endl;
-    outfile.close();
 }
 
-void Simulation::simulation_C(float superhelicity){
-    ofstream outfile(outfilename,ios::out);
+void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::simulation_C");
     }
@@ -561,7 +568,6 @@ void Simulation::simulation_C(float superhelicity){
     }
     //display result
     outfile << superhelicity << ' ' << expected_length << endl;
-    outfile.close();
 }
 
 void Simulation::sandbox() { //test/debug environment
@@ -590,7 +596,7 @@ void Simulation::sandbox() { //test/debug environment
     double last_supercoiling = 0.0;
     vector<double> x;
     vector<double> y;
-    double step_size = .01;
+    double step_size = .001;
     double tolerance = 0.05;
     char last_direction = 'n';
 
@@ -620,12 +626,12 @@ void Simulation::sandbox() { //test/debug environment
             // if the P(R-loop) is > 50% + tol
             if (partition_function / (partition_function + modelA.ground_state_factor()) < .5) {
                 //adjust supercoiling down
-                if (last_direction == 'd') {
+                if (last_direction == 'u') {
                     //overshot the target and outside the error tolerance
                     step_size /= 0.5; //cut step size in half
                 }
-                supercoiling += step_size;
-                last_direction = 'u';
+                supercoiling -= step_size;
+                last_direction = 'd';
             }
                 //if the {(R-loop) is < 50% - tol
                 //adjust supercoiling up

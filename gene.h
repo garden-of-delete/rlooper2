@@ -20,6 +20,7 @@ private:
     Loci position;
     std::vector<char> sequence;
     std::vector<std::vector<Structure>*> structures;
+private:
 
     /**
      * parses FASTA headers into the Gene's Loci member.
@@ -60,6 +61,9 @@ public:
      * @param   model   a Model object with an implemented compute_structure method.
      */
     void compute_structures(Model& model);
+
+    void compute_structures_circular(Model& model);
+
 
     /**
     * Computes
