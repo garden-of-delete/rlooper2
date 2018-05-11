@@ -46,6 +46,10 @@ void Simulation::set_circular(){
     circular_flag = true;
 }
 
+void Simulation::set_residuals(bool value){
+    residuals = value;
+}
+
 void Simulation::reverse_input(){
     reverse_flag = true;
 }
@@ -414,7 +418,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         cout << "processing gene: " << this_gene->getName() << "...";
         //compute structures using models
         if (this_gene->getPosition().strand == "+") {
-            //this_gene->complement_sequence();
+            this_gene->complement_sequence();
         }
         else if(this_gene->getPosition().strand == "-") {
             this_gene->invert_sequence();
@@ -448,7 +452,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             sanity_check += it->boltzmann_factor/partition_function;
         }
         sanity_check += models[0]->ground_state_factor()/partition_function;
-        double test = fabs(1-sanity_check);
+        cout << "P(ground state)= " << models[0]->ground_state_factor()/partition_function << endl;
         if (fabs(1-sanity_check) > .00001){
             throw SimulationException("Ensemble probability sum != 1"); //this throw is uncaught
         }
@@ -456,10 +460,10 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         vector<double>* signal = NULL, *signal2 = NULL, *signal3 = NULL;
         vector<Loci> peaks;
         compute_signal_bpprobs(*this_gene,signal);
-        compute_signal_average_G(*this_gene,signal2);
+        //compute_signal_average_G(*this_gene,signal2);
         compute_signal_mfe(*this_gene,signal3);
         write_wigfile(outfile1,this_gene,signal);
-        write_wigfile(outfile2,this_gene,signal2);
+        //write_wigfile(outfile2,this_gene,signal2);
         write_wigfile(outfile3,this_gene,signal3);
         //call peaks and write results to .bed files
         if (bedfile){
@@ -472,6 +476,26 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             write_bedfile(outfile6,this_gene,peaks);
         }
         cout << "complete!" << endl;
+        //output residuals if the option is selected
+        if (residuals){
+            double ensemble_residual_twist = 0, ensemble_residual_linking_difference=0;
+            this_gene->compute_residuals(*models[0]);
+            for (vector<Structure>::iterator it = this_gene->getStructures()[0]->begin();
+                 it < this_gene->getStructures()[0]->end(); ++it){
+                ensemble_residual_twist += it->residual_twist*it->probability;
+                ensemble_residual_linking_difference += it->residual_superhelicity*it->probability;
+            }
+            //consider the ground state as well
+            double twist = 0,writhe=0;
+            models[0]->ground_state_residuals(twist,writhe);
+            ensemble_residual_twist += twist*(models[0]->ground_state_factor()/partition_function);
+            ensemble_residual_linking_difference += writhe*(models[0]->ground_state_factor()/partition_function);
+            cout << "ensemble_residual_twist: " << ensemble_residual_twist << endl;
+            cout << "ensemble_residual_linking_difference: " << ensemble_residual_linking_difference << endl;
+            //convert linking difference to superhelicity
+            Rloop_equilibrium_model* temp = (Rloop_equilibrium_model*)models[0];
+            cout << "ensemble_residual_superhelicity: " << ensemble_residual_linking_difference/(temp->getN()*temp->getA()) << endl;
+        }
         delete signal;
         //clear_sequence the sequence data from the gene to save memory
         this_gene->clear_sequence();
@@ -571,7 +595,64 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
 }
 
 void Simulation::sandbox() { //test/debug environment
+    //R-loop length histogram
+    ofstream outfile(outfilename,ios::out);
+    Gene *this_gene;
+    this_gene = new Gene();
+    this_gene->read_gene(infile);
+    this_gene->windower.set_min_window_size(minlength);
+    if (this_gene->getPosition().strand == "+") {
+        this_gene->complement_sequence();
+    }
+    else if(this_gene->getPosition().strand == "-") {
+        this_gene->invert_sequence();
+    }
+    if (complement_flag) {
+        this_gene->complement_sequence();
+    }
+    if (reverse_flag) {
+        this_gene->invert_sequence();
+    }
+    genes.push_back(this_gene);
+    if (circular_flag) {
+        this_gene->compute_structures_circular(*models[0]);
+    }
+    else{
+        this_gene->compute_structures(*models[0]);
+    }
+    //determine P(ground state)
+    long double partition_function = 0;
+    long double ground_state_factor = 0;
+    long double sanity_check = 0;
+    for (vector<Structure>::iterator it = this_gene->getStructures()[0]->begin();
+         it < this_gene->getStructures()[0]->end(); ++it) {
+        partition_function += it->boltzmann_factor;
+    }
+    ground_state_factor = models[0]->ground_state_factor();
+
+    partition_function += ground_state_factor;
+    //sanity check code
+    for (vector<Structure>::iterator it = this_gene->getStructures()[0]->begin();
+         it < this_gene->getStructures()[0]->end(); ++it) {
+        sanity_check += it->boltzmann_factor/partition_function;
+    }
+    sanity_check += models[0]->ground_state_factor()/partition_function;
+    cout << "Sanity check: " << sanity_check << endl;
+    vector<long double> values;
+    values.assign(this_gene->getSequence().size()+1,0); //fill vector with 0s
+    values[0] = ground_state_factor/partition_function;
+    //iterate through structures and record each probability to the appropriate place in the values array
+    for (int i=1; i < this_gene->getStructures()[0]->size();i++){
+        values[this_gene->getStructures()[0][0][i].position.get_length()] += this_gene->getStructures()[0][0][i].boltzmann_factor/partition_function;
+    }
+    for (int i=0; i < values.size(); i++){
+        outfile << i << ' ' << values[i] << endl;
+    }
+    outfile.close();
+}
+
 /*
+ * Test clustering code
     srand(454); //needs to be an argument
     ifstream test("test.bed",ios::in);
     vector<Loci> testvector, clustered_peaks;
@@ -581,7 +662,7 @@ void Simulation::sandbox() { //test/debug environment
     /*
      * Craig's graph function is here. needs to be migrated elsewhere so sandbox can continue being used as a test function.
      *
-     * */
+     *
 
     ofstream outfile(outfilename, ios::out);
     if (!infile.is_open()) {
@@ -635,14 +716,14 @@ void Simulation::sandbox() { //test/debug environment
             }
                 //if the {(R-loop) is < 50% - tol
                 //adjust supercoiling up
-                /*
+                //start comment block here
                     if (last_direction == 'd'){
                         //overshot the target and outside the error tolerance
                         step_size /= 0.5; //cut step size in half
                     }
                     supercoiling += step_size;
                     last_direction = 'u';
-                } *///end comment block here
+                } //end comment block here
             else { //hit target within tolerance
                 cout << "complete" << endl;
                 x.push_back(bp_energy);
@@ -659,4 +740,4 @@ void Simulation::sandbox() { //test/debug environment
         outfile << ss.rdbuf();
     }
     outfile.close();
-}
+} */

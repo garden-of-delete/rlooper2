@@ -12,7 +12,7 @@ Rloop_equilibrium_model::Rloop_equilibrium_model() {
     C = 1.8; //tortional stiffness of ssDNA winding. (Could be 3.6 for ds or 1.8 for ss winding)
     T = 310;
     k = (2200 * 0.0019858775 * T) / N; //Hooke's law coefficient: (2200*ideal_gas_constant in kcal/mol*absolute_temp_in_kelvin)/N
-    a = 10; //Neucleation Free Energy in Kcals (~3-10.2kCals) 5000
+    a = 20; //Neucleation Free Energy in Kcals (~3-10.2kCals) 5000
     sigma = -0.07; //measurement of energy upstream of replication domain
     alpha = N*sigma*A; //linking difference: topological parameter
 
@@ -36,11 +36,6 @@ Rloop_equilibrium_model::Rloop_equilibrium_model() {
     rUU_dAA = .8;
     homopolymer_override = false;
     override_energy = 0.0;
-}
-
-//getters
-int Rloop_equilibrium_model::getMinimum_loop_length() const {
-    return minimum_loop_length;
 }
 
 int Rloop_equilibrium_model::getN() const {
@@ -71,13 +66,10 @@ double Rloop_equilibrium_model::getAlpha() const {
     return alpha;
 }
 
-void Rloop_equilibrium_model::setMinimum_loop_length(int minimum_loop_length) {
-    Rloop_equilibrium_model::minimum_loop_length = minimum_loop_length;
-}
-
 void Rloop_equilibrium_model::setN(int N) {
     Rloop_equilibrium_model::N = N;
     setAlpha(N*sigma*A);
+    k = (2200 * 0.0019858775 * T) / N;
 }
 
 void Rloop_equilibrium_model::setA(double A) {
@@ -112,6 +104,7 @@ double Rloop_equilibrium_model::getT() const {
 
 void Rloop_equilibrium_model::setT(double T) {
     Rloop_equilibrium_model::T = T;
+    k = (2200 * 0.0019858775 * T) / N;
 }
 
 double Rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second){
@@ -188,6 +181,16 @@ void Rloop_equilibrium_model::compute_structure(const std::vector<char>::iterato
         structure.free_energy += step_forward_bps(b_0,b_0+1);
         structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
     }
+}
+
+void Rloop_equilibrium_model::compute_residuals(Structure &structure){
+    structure.residual_superhelicity = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length())) * (alpha+structure.position.get_length()*A);
+    structure.residual_twist = ((2*pi*k) / (4*pow(pi,2)*C+k*structure.position.get_length())) * (alpha+structure.position.get_length()*A);
+}
+
+void Rloop_equilibrium_model::ground_state_residuals(double &twist, double &writhe){
+    writhe = alpha;
+    twist = k/(2*pi)*C*alpha;
 }
 
 long double Rloop_equilibrium_model::ground_state_factor(){

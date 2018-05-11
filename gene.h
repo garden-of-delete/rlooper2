@@ -64,12 +64,10 @@ public:
 
     void compute_structures_circular(Model& model);
 
-
     /**
-    * Computes
-    * @param   model    a Model object with an implemented compute_structure method.
-    */
-    void compute_boundary_structures(Model& model);
+     * computes residual twist and superhelicity for the ensemble
+     */
+    void compute_residuals(Model& model);
 
     /**
      * Clears all structures associated with the gene, correctly deallocating them in memory.

@@ -36,10 +36,11 @@ public:
     double free_energy;
     long double boltzmann_factor;
     double probability;
-    double quantity_of_interest;
+    double residual_twist;
+    double residual_superhelicity;
     //constructors
-    Structure(): free_energy(0.), boltzmann_factor(0.), probability(0.), quantity_of_interest(0.) {}
-    Structure(Loci, float, float, float, float);
+    Structure(): free_energy(0.), boltzmann_factor(0.), probability(0.), residual_twist(0.), residual_superhelicity(0.) {}
+    Structure(Loci, float, float, float);
 };
 
 #endif

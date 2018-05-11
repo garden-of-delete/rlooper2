@@ -206,8 +206,16 @@ void Gene::compute_structures_circular(Model &model){
     structures.push_back(these_structures);
 }
 
+void Gene::compute_residuals(Model &model){
+    //verify that the structures have been computed
+    //iterate through all the structures
+    for (int i=0; i < (*structures[0]).size(); i++){ //not iterating through all the structures
+        model.compute_residuals((*structures[0])[i]);
+    }
+}
+
 void Gene::clear_structures(){
-    for (auto it = structures.begin(); it != structures.end(); ++it ){
+    for (auto it = structures.begin(); it != structures.end(); ++it){
         delete *it;
     }
     structures.clear();

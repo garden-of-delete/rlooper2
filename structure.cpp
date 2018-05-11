@@ -12,10 +12,9 @@ int Loci::get_length(){
 
 Peak::Peak(Loci l, int i): position(l), intensity(i) {}
 
-Structure::Structure(Loci l, float f, float b, float p, float q) {
+Structure::Structure(Loci l, float f, float b, float p) {
     position = l;
     free_energy = f;
     boltzmann_factor = b;
     probability = p;
-    quantity_of_interest = q;
 }

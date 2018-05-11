@@ -8,6 +8,7 @@ int main(int argc, char* argv[]) {
 
     Simulation sim;
     Rloop_equilibrium_model model;
+    bool sandbox = false;
     //process command line arguments
     sim.set_infile(argv[1]);
     sim.set_outfile(argv[2]);
@@ -20,6 +21,10 @@ int main(int argc, char* argv[]) {
             model.seta(atof(argv[i+1]));
             i++;
         }
+        else if (!strcmp(argv[i], "--N")) {
+            model.setN(atoi(argv[i+1]));
+            i++;
+        }
         else if (!strcmp(argv[i], "--minlength")) {
             sim.set_minlength(atoi(argv[i+1]));
             i++;
@@ -30,16 +35,21 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[i], "--complement")) {
             sim.complement_input();
         }
+        else if (!strcmp(argv[i], "--invert")) {
+            sim.complement_input();
+            sim.reverse_input();
+        }
         else if (!strcmp(argv[i], "--sandbox")) {
-            sim.add_model(model);
-            sim.sandbox();
-            return 0;
+            sandbox = true;
         }
         else if (!strcmp(argv[i], "--bedfile")) {
             sim.set_bedfile(true);
         }
         else if (!strcmp(argv[i], "--circular")) {
             sim.set_circular();
+        }
+        else if (!strcmp(argv[i], "--residuals")) {
+            sim.set_residuals(true);
         }
         else if (!strcmp(argv[i], "--sensitivity")) {
             sim.set_power_threshold(atoi(argv[i+1]));
@@ -51,6 +61,10 @@ int main(int argc, char* argv[]) {
         }
     }
     sim.add_model(model);
+    if (sandbox){
+        sim.sandbox();
+        return 0;
+    }
     sim.simulation_A();
 
     return 0;

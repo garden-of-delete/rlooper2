@@ -11,7 +11,6 @@
 class Rloop_equilibrium_model: public Model{
 protected:
     //model parameters
-    int minimum_loop_length; //possibly not relevant in the future
     //equilibrium energetics parameters
     int N; //experimentally determined length of the (-) sc domain adter the transcription machinery
     double A; //turns/bp of the B-form double helix
@@ -47,8 +46,6 @@ public:
     Rloop_equilibrium_model();
     //need a special constructor that lets your specify some or all of these parameters
 
-    //getters
-    int getMinimum_loop_length() const;
     int getN() const;
     double getA() const;
     double getC() const;
@@ -57,7 +54,6 @@ public:
     double geta() const;
     double getSigma() const;
     double getAlpha() const;
-    void setMinimum_loop_length(int minimum_loop_length);
     void setN(int N);
     void setA(double A);
     void setC(double C);
@@ -72,6 +68,8 @@ public:
     double step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second);
     double compute_bps_interval(const char &first, const char &second);
     void compute_structure(const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure);
+    void compute_residuals(Structure& structure);
+    void ground_state_residuals(double& twist, double& writhe);
     long double ground_state_factor();
 };
 #endif //RLOOPER2_MODEL_H
