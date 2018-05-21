@@ -26,6 +26,7 @@ private:
     bool bedfile;
     bool circular_flag;
     bool residuals;
+    bool auto_domain_size;
     //member functions
     void compute_signal_bpprobs(Gene &gene, vector<double> *&signal);
     void compute_signal_average_G(Gene &gene, vector<double> *&signal);
@@ -66,6 +67,7 @@ public:
     void set_power_threshold(int Power_threshold);
     void set_circular(); //this should take a boolean
     void set_residuals(bool value);
+    void set_auto_domain_size(bool value);
     void reverse_input();
     void complement_input();
     std::vector<Model*> get_models();

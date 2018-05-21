@@ -12,7 +12,7 @@ Rloop_equilibrium_model::Rloop_equilibrium_model() {
     C = 1.8; //tortional stiffness of ssDNA winding. (Could be 3.6 for ds or 1.8 for ss winding)
     T = 310;
     k = (2200 * 0.0019858775 * T) / N; //Hooke's law coefficient: (2200*ideal_gas_constant in kcal/mol*absolute_temp_in_kelvin)/N
-    a = 20; //Neucleation Free Energy in Kcals (~3-10.2kCals) 5000
+    a = 10; //Neucleation Free Energy in Kcals (~3-10.2kCals) 5000
     sigma = -0.07; //measurement of energy upstream of replication domain
     alpha = N*sigma*A; //linking difference: topological parameter
 

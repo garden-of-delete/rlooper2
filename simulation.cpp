@@ -14,6 +14,7 @@ Simulation::Simulation(){
     complement_flag = false;
     power_threshold = 1;
     circular_flag = false;
+    auto_domain_size = false;
 }
 
 Simulation::~Simulation(){
@@ -48,6 +49,10 @@ void Simulation::set_circular(){
 
 void Simulation::set_residuals(bool value){
     residuals = value;
+}
+
+void Simulation::set_auto_domain_size(bool value){
+    auto_domain_size = value;
 }
 
 void Simulation::reverse_input(){
@@ -417,6 +422,9 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         eof = this_gene->read_gene(infile);
         cout << "processing gene: " << this_gene->getName() << "...";
         //compute structures using models
+        if (auto_domain_size){
+            static_cast<Rloop_equilibrium_model*>(models[0])->setN(this_gene->get_length());
+        }
         if (this_gene->getPosition().strand == "+") {
             this_gene->complement_sequence();
         }
@@ -435,6 +443,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         else{
             this_gene->compute_structures(*models[0]);
         }
+
 
         //ensemble analysis, free energies and boltzmann factors have already been computed in compute_structures
         //compute partition function
@@ -570,8 +579,26 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     else{
         this_gene = genes[0];
     }
+    if (this_gene->getPosition().strand == "+") {
+        this_gene->complement_sequence();
+    }
+    else if(this_gene->getPosition().strand == "-") {
+        this_gene->invert_sequence();
+    }
+    if (complement_flag) {
+        this_gene->complement_sequence();
+    }
+    if (reverse_flag) {
+        this_gene->invert_sequence();
+    }
     models[0]->set_superhelicity(superhelicity); //set the superhelicity in the model to the provided value
-    this_gene->compute_structures(*models[0]);
+    if (circular_flag) {
+        this_gene->compute_structures_circular(*models[0]);
+    }
+    else{
+        this_gene->compute_structures(*models[0]);
+    }
+
     //determine P(ground state)
     long double partition_function = 0;
     long double ground_state_factor = 0;
@@ -579,6 +606,7 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     int count = 0;
     for (vector<Structure>::iterator it = this_gene->getStructures()[index-1]->begin();
          it < this_gene->getStructures()[index-1]->end(); ++it){
+
         partition_function += it->boltzmann_factor;
         count++;
     }
@@ -589,9 +617,19 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     for (vector<Structure>::iterator it = this_gene->getStructures()[index-1]->begin();
          it < this_gene->getStructures()[index-1]->end(); ++it){
         expected_length += (it->boltzmann_factor/partition_function)*it->position.get_length();
+
     }
+    double var = 0, n = 0;
+    //compute and report weighted variance
+    for (vector<Structure>::iterator it = this_gene->getStructures()[index-1]->begin();
+         it < this_gene->getStructures()[index-1]->end(); ++it){
+
+        var += (it->boltzmann_factor/partition_function)*pow(it->position.get_length()-expected_length,2);
+        n += 1;
+    }
+    var /= n-1;
     //display result
-    outfile << superhelicity << ' ' << expected_length << endl;
+    outfile << superhelicity << ' ' << expected_length << ' ' << var << endl;
 }
 
 void Simulation::sandbox() { //test/debug environment

@@ -128,6 +128,7 @@ bool Gene::read_gene(ifstream& fastafile) { //need to test
         else if (c == '\n' || c == ' ' || c == '\t'){
             p = fastafile.peek();
             if (p == '>'){
+                windower.set_sequence(sequence);
                 return false;
             }
             /*else if (p == EOF) {
@@ -176,7 +177,6 @@ void Gene::compute_structures(Model &model){
         //push the now computed structure onto these_structures
         these_structures->push_back(temp); //need to make sure the default copy constructor is working properly
     }
-    cout << these_structures->size() << endl;
     structures.push_back(these_structures);
 }
 

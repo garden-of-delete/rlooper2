@@ -22,7 +22,12 @@ int main(int argc, char* argv[]) {
             i++;
         }
         else if (!strcmp(argv[i], "--N")) {
-            model.setN(atoi(argv[i+1]));
+            if (!strcmp(argv[i+1],"auto")){
+                sim.set_auto_domain_size(true);
+            }
+            else{
+                model.setN(atoi(argv[i+1]));
+            }
             i++;
         }
         else if (!strcmp(argv[i], "--minlength")) {
@@ -39,6 +44,7 @@ int main(int argc, char* argv[]) {
             sim.complement_input();
             sim.reverse_input();
         }
+            //options specific to ensemble analyzer
         else if (!strcmp(argv[i], "--sandbox")) {
             sandbox = true;
         }
