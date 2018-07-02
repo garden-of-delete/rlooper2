@@ -44,6 +44,10 @@ int main(int argc, char* argv[]) {
             sim.complement_input();
             sim.reverse_input();
         }
+        else if (!strcmp(argv[i], "--homopolymer")) {
+            model.set_bp_energy_override(atof(argv[i+1]));
+            i++;
+        }
             //options specific to ensemble analyzer
         else if (!strcmp(argv[i], "--sandbox")) {
             sandbox = true;
@@ -59,6 +63,10 @@ int main(int argc, char* argv[]) {
         }
         else if (!strcmp(argv[i], "--sensitivity")) {
             sim.set_power_threshold(atoi(argv[i+1]));
+            i++;
+        }
+        else if (!strcmp(argv[i], "--top")) {
+            sim.set_top(atoi(argv[i+1]));
             i++;
         }
         else{

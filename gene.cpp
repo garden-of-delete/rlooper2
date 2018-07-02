@@ -244,7 +244,7 @@ void Gene::invert_sequence(){
 }
 
 int Gene::get_length(){
-    return abs(position.end_pos - position.start_pos); //abs here or negative length exception?
+    return sequence.size();
 }
 
 void Gene::clear_sequence(){

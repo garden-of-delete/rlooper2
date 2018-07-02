@@ -21,6 +21,7 @@ private:
     ifstream infile;
     string outfilename;
     int minlength, power_threshold; //a minimum loop length to be applied simulation-wide.
+    int top; //indicates how many of the most favorable structures to output when the --top option is used
     bool reverse_flag;
     bool complement_flag;
     bool bedfile;
@@ -68,6 +69,7 @@ public:
     void set_circular(); //this should take a boolean
     void set_residuals(bool value);
     void set_auto_domain_size(bool value);
+    void set_top(int n);
     void reverse_input();
     void complement_input();
     std::vector<Model*> get_models();
@@ -89,6 +91,11 @@ public:
      * @param superhelicity
      */
     void simulation_C(float superhelicity, ofstream& outfile);
+
+    /**
+     * WIP Dynamic simulation
+     */
+    void simulation_D();
 
     /**
     * A test environmnet for debugging purposes

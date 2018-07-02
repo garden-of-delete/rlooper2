@@ -15,6 +15,7 @@ Simulation::Simulation(){
     power_threshold = 1;
     circular_flag = false;
     auto_domain_size = false;
+    top = 0;
 }
 
 Simulation::~Simulation(){
@@ -61,6 +62,10 @@ void Simulation::reverse_input(){
 
 void Simulation::complement_input(){
     complement_flag = true;
+}
+
+void Simulation::set_top(int n){
+    top = n;
 }
 
 std::vector<Model*> Simulation::get_models(){
@@ -151,7 +156,7 @@ void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector
     Structure* temp;
     for (int i=0; i < signal.size(); i++){
         //determine lowest value in the signal
-        if (signal[i] < minimum){
+        if (signal[i] < minimum && signal[i] != 0){
             minimum = signal[i];
         }
     }
@@ -423,7 +428,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         cout << "processing gene: " << this_gene->getName() << "...";
         //compute structures using models
         if (auto_domain_size){
-            static_cast<Rloop_equilibrium_model*>(models[0])->setN(this_gene->get_length());
+            static_cast<Rloop_equilibrium_model*>(models[0])->setN(this_gene->get_length()); //need to compute this from the actual sequence.
         }
         if (this_gene->getPosition().strand == "+") {
             this_gene->complement_sequence();
@@ -469,10 +474,10 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         vector<double>* signal = NULL, *signal2 = NULL, *signal3 = NULL;
         vector<Loci> peaks;
         compute_signal_bpprobs(*this_gene,signal);
-        //compute_signal_average_G(*this_gene,signal2);
+        compute_signal_average_G(*this_gene,signal2);
         compute_signal_mfe(*this_gene,signal3);
         write_wigfile(outfile1,this_gene,signal);
-        //write_wigfile(outfile2,this_gene,signal2);
+        write_wigfile(outfile2,this_gene,signal2);
         write_wigfile(outfile3,this_gene,signal3);
         //call peaks and write results to .bed files
         if (bedfile){
@@ -505,6 +510,17 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             Rloop_equilibrium_model* temp = (Rloop_equilibrium_model*)models[0];
             cout << "ensemble_residual_superhelicity: " << ensemble_residual_linking_difference/(temp->getN()*temp->getA()) << endl;
         }
+        /*if (top > 0){
+            //sort top N structures into a new vector
+            std::sort(this_gene->getStructures()[0].begin(),this_gene->getStructures()[0].end()); //working?
+            //output structures to .bed file
+            for (int i=0; i < this_gene->getStructures().size();i++){
+                if (this_gene->getStructures()[0][i].length >= N){
+
+                }
+            }
+            cout << "fuck" < endl;
+        }*/
         delete signal;
         //clear_sequence the sequence data from the gene to save memory
         this_gene->clear_sequence();
@@ -532,8 +548,8 @@ void Simulation::simulation_B(float superhelicity, ofstream& outfile){
         this_gene = new Gene();
         this_gene->read_gene(infile);
         this_gene->windower.set_min_window_size(minlength);
-        this_gene->complement_sequence();
-        //this_gene->invert_sequence();
+        //this_gene->complement_sequence();
+        this_gene->invert_sequence();
         genes.push_back(this_gene);
     }
     else{
@@ -632,7 +648,22 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     outfile << superhelicity << ' ' << expected_length << ' ' << var << endl;
 }
 
+void Simulation::simulation_D(){
+    //process input sequence
+
+    //simulate n rounds of transcription
+        //set initial sliding window
+        //while polymerase not at the end of the gene
+            //if not in an r-loop, compute the energetic character of the current window
+                //decide if R-loop initiates and set flags
+            //else if in an r-loop, compute the energetic character of the current window and weight against the character of the whole structure
+}
+
 void Simulation::sandbox() { //test/debug environment
+    //sum sequence favorability
+
+
+    /*
     //R-loop length histogram
     ofstream outfile(outfilename,ios::out);
     Gene *this_gene;
@@ -687,7 +718,7 @@ void Simulation::sandbox() { //test/debug environment
         outfile << i << ' ' << values[i] << endl;
     }
     outfile.close();
-}
+}*/
 
 /*
  * Test clustering code
@@ -777,5 +808,5 @@ void Simulation::sandbox() { //test/debug environment
         ss << x[i] << ' ' << y[i] << endl;
         outfile << ss.rdbuf();
     }
-    outfile.close();
-} */
+    outfile.close(); */
+}

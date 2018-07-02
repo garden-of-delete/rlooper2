@@ -38,6 +38,8 @@ public:
     double probability;
     double residual_twist;
     double residual_superhelicity;
+    //operators
+    bool operator<(const Structure &rhs) const { return free_energy < rhs.free_energy; } //overloaded < operator for sorting
     //constructors
     Structure(): free_energy(0.), boltzmann_factor(0.), probability(0.), residual_twist(0.), residual_superhelicity(0.) {}
     Structure(Loci, float, float, float);
