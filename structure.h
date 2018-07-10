@@ -14,7 +14,6 @@ public:
     long int end_pos;
     Loci(): start_pos(0), end_pos(0) {}
     Loci(std::string, std::string, long int, long int);
-
     /**
      * Returns the length in base pairs of the loci
      * @returns an int representing the length of the loci
@@ -37,11 +36,11 @@ public:
     long double boltzmann_factor;
     double probability;
     double residual_twist;
-    double residual_superhelicity;
+    double residual_linking_difference;
     //operators
     bool operator<(const Structure &rhs) const { return free_energy < rhs.free_energy; } //overloaded < operator for sorting
     //constructors
-    Structure(): free_energy(0.), boltzmann_factor(0.), probability(0.), residual_twist(0.), residual_superhelicity(0.) {}
+    Structure(): free_energy(0.), boltzmann_factor(0.), probability(0.), residual_twist(0.), residual_linking_difference(0.) {}
     Structure(Loci, float, float, float);
 };
 

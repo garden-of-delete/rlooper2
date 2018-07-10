@@ -184,7 +184,7 @@ void Rloop_equilibrium_model::compute_structure(const std::vector<char>::iterato
 }
 
 void Rloop_equilibrium_model::compute_residuals(Structure &structure){
-    structure.residual_superhelicity = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length())) * (alpha+structure.position.get_length()*A);
+    structure.residual_linking_difference = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length())) * (alpha+structure.position.get_length()*A);
     structure.residual_twist = ((2*pi*k) / (4*pow(pi,2)*C+k*structure.position.get_length())) * (alpha+structure.position.get_length()*A);
 }
 

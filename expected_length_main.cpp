@@ -59,6 +59,10 @@ int main(int argc, char* argv[]) {
             model.set_bp_energy_override(atof(argv[i+1]));
             i++;
         }
+        else if (!strcmp(argv[i], "--top")) {
+            sim.set_top(atoi(argv[i+1]));
+            i++;
+        }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;
             exit(1);

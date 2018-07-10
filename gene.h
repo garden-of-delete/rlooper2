@@ -19,7 +19,7 @@ private:
     std::string header;
     Loci position;
     std::vector<char> sequence;
-    std::vector<std::vector<Structure>*> structures;
+    std::vector<Structure> rloop_structures;
 private:
 
     /**
@@ -42,7 +42,7 @@ public:
     void setPosition(const Loci &position);
     const vector<char, allocator<char>> &getSequence() const;
     //void setSequence(const vector<char, allocator<char>> &sequence);
-    vector<vector<Structure>*> getStructures();
+    vector<Structure>& getStructures();
     //member functions
     /**
      * Reads the next FASTA record from the input file. Calls parse_header.

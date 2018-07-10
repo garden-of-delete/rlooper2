@@ -77,8 +77,8 @@ const vector<char, allocator<char>> &Gene::getSequence() const {
     return sequence;
 }
 
-vector<vector<Structure>*> Gene::getStructures(){
-    return structures;
+vector<Structure>& Gene::getStructures(){
+    return rloop_structures;
 }
 
 float Gene::compute_GC_skew(){
@@ -157,7 +157,6 @@ void Gene::print_gene(){
 
 void Gene::compute_structures(Model &model){
     //check for circular sequence conditions
-    std::vector<Structure>* these_structures = new vector<Structure>;
     if (sequence.size() == 0){
         //throw exception
     }
@@ -175,14 +174,12 @@ void Gene::compute_structures(Model &model){
         //pass the structure and window boundaries to the model
         model.compute_structure(start,stop,temp);
         //push the now computed structure onto these_structures
-        these_structures->push_back(temp); //need to make sure the default copy constructor is working properly
+        rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
     }
-    structures.push_back(these_structures);
 }
 
-void Gene::compute_structures_circular(Model &model){
+void Gene::compute_structures_circular(Model &model){ //not working
     //check for circular sequence conditions
-    std::vector<Structure>* these_structures = new vector<Structure>;
     if (sequence.size() == 0){
         //throw exception
     }
@@ -200,25 +197,21 @@ void Gene::compute_structures_circular(Model &model){
         //pass the structure and window boundaries to the model
         model.compute_structure(start,stop,temp);
         //push the now computed structure onto these_structures
-        these_structures->push_back(temp); //need to make sure the default copy constructor is working properly
+        rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
     }
-    cout << these_structures->size() << endl;
-    structures.push_back(these_structures);
+    cout << rloop_structures.size() << endl;
 }
 
 void Gene::compute_residuals(Model &model){
     //verify that the structures have been computed
     //iterate through all the structures
-    for (int i=0; i < (*structures[0]).size(); i++){ //not iterating through all the structures
-        model.compute_residuals((*structures[0])[i]);
+    for (int i=0; i < rloop_structures.size(); i++){ //not iterating through all the structures???
+        model.compute_residuals(rloop_structures[i]);
     }
 }
 
 void Gene::clear_structures(){
-    for (auto it = structures.begin(); it != structures.end(); ++it){
-        delete *it;
-    }
-    structures.clear();
+    rloop_structures.clear();
 }
 
 void Gene::complement_sequence(){
