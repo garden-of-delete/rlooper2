@@ -1,4 +1,4 @@
-# rlooper
+# R-looper 2
 
 ## Synopsis
 R-looper is an application designed to enable theoretical analysis of R-loops and R-loop forming regions. The suite contains different applications that share a common code base. Each application in the suite is described below R-looper is compatible only with UNIX based architectures (Linux, OSX, etc), and must be compiled on the user's machine.
@@ -35,7 +35,7 @@ The second argument is the name that will be used as the base for the output .be
 
 `--sensitivity` is used only when `--bedfile` is speficied and specifies the sensitivity of the threshold-based peak caller. PROVIDE EXAMPLES AND A USAGE GUIDE HERE
 
-`--residuals`
+`--residuals` computes and outputs residual quantities to stdout. These quantities describe the expected amount of remaining superhlicity in a molecule consisting of the provided sequence, devided between twist and writhe. Can be easily used to determine how much relaxation would be expected on this molecule if single R-loops were allowed to form. 
 
 `--circular` treats the provided of sequence as circular by adding an additional set of r-loop structures to the ensemble that would span the boundry between the beginning and end of the sequence if the sequence is circular. Useful in a case where a small circular molecule is being transcribed and a region of energetic favorability lies at the end of the provided sequence.
 
