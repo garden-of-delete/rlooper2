@@ -28,15 +28,28 @@ int main(int argc, char* argv[]) {
             model.seta(atof(argv[i + 1]));
             i++;
         }
+        else if (!strcmp(argv[i], "--N")) {
+            if (!strcmp(argv[i+1],"auto")){
+                sim.set_auto_domain_size(true);
+            }
+            else{
+                model.setN(atoi(argv[i+1]));
+            }
+            i++;
+        }
         else if (!strcmp(argv[i], "--minlength")) {
             sim.set_minlength(atoi(argv[i + 1]));
             i++;
         }
-        else if (!strcmp(argv[i], "--reverse")){
+        else if (!strcmp(argv[i], "--reverse")) {
             sim.reverse_input();
         }
-        else if (!strcmp(argv[i], "--complement")){
+        else if (!strcmp(argv[i], "--complement")) {
             sim.complement_input();
+        }
+        else if (!strcmp(argv[i], "--invert")) {
+            sim.complement_input();
+            sim.reverse_input();
         }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;

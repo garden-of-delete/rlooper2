@@ -158,6 +158,7 @@ void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector
     for (int i=0; i < signal.size(); i++){
         //determine lowest value in the signal
         if (signal[i] < minimum && signal[i] != 0){
+            cout << signal[i] << endl;
             minimum = signal[i];
         }
     }
@@ -563,12 +564,25 @@ void Simulation::simulation_B(float superhelicity, ofstream& outfile){
         this_gene = new Gene();
         this_gene->read_gene(infile);
         this_gene->windower.set_min_window_size(minlength);
+        if (this_gene->getPosition().strand == "+") {
+            this_gene->complement_sequence();
+        }
+        else if(this_gene->getPosition().strand == "-") {
+            this_gene->invert_sequence();
+        }
+        if (complement_flag) {
+            this_gene->complement_sequence();
+        }
+        if (reverse_flag) {
+            this_gene->invert_sequence();
+        }
         //this_gene->complement_sequence();
-        this_gene->invert_sequence();
+        //this_gene->invert_sequence();
         genes.push_back(this_gene);
     }
     else{
         this_gene = genes[0];
+        this_gene->clear_structures();
     }
     models[0]->set_superhelicity(superhelicity); //set the superhelicity in the model to the provided value
     this_gene->clear_structures(); //saves memory
@@ -607,6 +621,7 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     }
     else{
         this_gene = genes[0];
+        this_gene->clear_structures();
     }
     if (this_gene->getPosition().strand == "+") {
         this_gene->complement_sequence();
