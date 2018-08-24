@@ -672,11 +672,11 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     //compute and report weighted variance
     for (vector<Structure>::iterator it = this_gene->getStructures().begin();
          it < this_gene->getStructures().end(); ++it){
-        if (top > 0 && it->position.get_length() > top) {
-            var += (it->boltzmann_factor / partition_function) * pow(it->position.get_length() - expected_length, 2);
-            n += (it->boltzmann_factor / partition_function);
+        if (top > 0) {
+            //do nothing
         }
         else if (top == 0){
+            //build weighted variance for the whole ensemble
             var += (it->boltzmann_factor / partition_function) * pow(it->position.get_length() - expected_length, 2);
             n += (it->boltzmann_factor / partition_function);
         }

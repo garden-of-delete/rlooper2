@@ -26,6 +26,10 @@ int main(int argc, char* argv[]) {
             }
             i++;
         }
+        else if (!strcmp(argv[i], "--sigma")) {
+            model.set_superhelicity(atof(argv[i+1]));
+            i++;
+        }
         else if (!strcmp(argv[i], "--minlength")) {
             sim.set_minlength(atoi(argv[i+1]));
             i++;
