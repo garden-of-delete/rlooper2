@@ -4,6 +4,10 @@
 R-looper is an application designed to enable theoretical analysis of R-loops and R-loop forming regions. The suite contains different applications that share a common code base. Each application in the suite is described below R-looper is compatible only with UNIX based architectures (Linux, OSX, etc), and must be compiled on the user's machine.
  
 ## Installation
+Prerequisites:
+- Unix based system (Ubuntu, OSX, etc)
+- Install git if required: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+
 To install follow these steps:
 1. Open a terminal, and navigate into a directory where you want the software to be.
 2. clone the repository onto a directory on your computer, using `git pull https://github.com/vopler/rlooper2 master`.
