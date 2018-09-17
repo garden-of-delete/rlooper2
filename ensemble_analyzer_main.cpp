@@ -69,6 +69,12 @@ int main(int argc, char* argv[]) {
             sim.set_top(atoi(argv[i+1]));
             i++;
         }
+        else if (!strcmp(argv[i], "--dump")) {
+            sim.set_dump(true);
+        }
+        else if (!strcmp(argv[i], "--averageenergy")) {
+            sim.set_average_g(true);
+        }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;
             exit(1);

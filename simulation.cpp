@@ -16,6 +16,8 @@ Simulation::Simulation(){
     circular_flag = false;
     auto_domain_size = false;
     top = 0;
+    dump = false;
+    average_g = false;
 }
 
 Simulation::~Simulation(){
@@ -54,6 +56,14 @@ void Simulation::set_residuals(bool value){
 
 void Simulation::set_auto_domain_size(bool value){
     auto_domain_size = value;
+}
+
+void Simulation::set_dump(bool value){
+    dump = value;
+}
+
+void Simulation::set_average_g(bool value){
+    average_g = value;
 }
 
 void Simulation::reverse_input(){
@@ -158,7 +168,6 @@ void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector
     for (int i=0; i < signal.size(); i++){
         //determine lowest value in the signal
         if (signal[i] < minimum && signal[i] != 0){
-            cout << signal[i] << endl;
             minimum = signal[i];
         }
     }
@@ -451,7 +460,6 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             this_gene->compute_structures(*models[0]);
         }
 
-
         //ensemble analysis, free energies and boltzmann factors have already been computed in compute_structures
         //compute partition function
         long double partition_function = 0;
@@ -477,10 +485,14 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         vector<double>* signal = NULL, *signal2 = NULL, *signal3 = NULL;
         vector<Loci> peaks;
         compute_signal_bpprobs(*this_gene,signal);
-        compute_signal_average_G(*this_gene,signal2);
+        if (average_g){
+            compute_signal_average_G(*this_gene,signal2);
+        }
         compute_signal_mfe(*this_gene,signal3);
         write_wigfile(outfile1,this_gene,signal);
-        write_wigfile(outfile2,this_gene,signal2);
+        if (average_g) {
+            write_wigfile(outfile2, this_gene, signal2);
+        }
         write_wigfile(outfile3,this_gene,signal3);
         //call peaks and write results to .bed files
         if (bedfile){
@@ -536,6 +548,9 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
                      << this_gene->getStructures()[i].residual_linking_difference << ' '
                      << this_gene->getStructures()[i].residual_linking_difference / (temp->getN() * temp->getA()) << endl;
             }
+        }
+        if (dump){
+            this_gene->dump_structures(outfilename);
         }
         delete signal;
         //clear_sequence the sequence data from the gene to save memory
@@ -701,7 +716,7 @@ void Simulation::sandbox() { //test/debug environment
     //sum sequence favorability
 
 
-    /*
+
     //R-loop length histogram
     ofstream outfile(outfilename,ios::out);
     Gene *this_gene;
@@ -731,16 +746,16 @@ void Simulation::sandbox() { //test/debug environment
     long double partition_function = 0;
     long double ground_state_factor = 0;
     long double sanity_check = 0;
-    for (vector<Structure>::iterator it = this_gene->getStructures()[0]->begin();
-         it < this_gene->getStructures()[0]->end(); ++it) {
+    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
+         it < this_gene->getStructures().end(); ++it) {
         partition_function += it->boltzmann_factor;
     }
     ground_state_factor = models[0]->ground_state_factor();
 
     partition_function += ground_state_factor;
     //sanity check code
-    for (vector<Structure>::iterator it = this_gene->getStructures()[0]->begin();
-         it < this_gene->getStructures()[0]->end(); ++it) {
+    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
+         it < this_gene->getStructures().end(); ++it) {
         sanity_check += it->boltzmann_factor/partition_function;
     }
     sanity_check += models[0]->ground_state_factor()/partition_function;
@@ -749,14 +764,14 @@ void Simulation::sandbox() { //test/debug environment
     values.assign(this_gene->getSequence().size()+1,0); //fill vector with 0s
     values[0] = ground_state_factor/partition_function;
     //iterate through structures and record each probability to the appropriate place in the values array
-    for (int i=1; i < this_gene->getStructures()[0]->size();i++){
-        values[this_gene->getStructures()[0][0][i].position.get_length()] += this_gene->getStructures()[0][0][i].boltzmann_factor/partition_function;
+    for (int i=1; i < this_gene->getStructures().size();i++){
+        values[this_gene->getStructures()[i].position.get_length()] += this_gene->getStructures()[i].boltzmann_factor/partition_function;
     }
     for (int i=0; i < values.size(); i++){
         outfile << i << ' ' << values[i] << endl;
     }
     outfile.close();
-}*/
+}
 
 /*
  * Test clustering code
@@ -847,4 +862,3 @@ void Simulation::sandbox() { //test/debug environment
         outfile << ss.rdbuf();
     }
     outfile.close(); */
-}

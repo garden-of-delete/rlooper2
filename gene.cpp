@@ -245,3 +245,15 @@ void Gene::clear_sequence(){
     sequence.clear();
 }
 
+void Gene::dump_structures(string outfilename){
+    ofstream dumpfile(outfilename + gene_name + "_dump.txt",ios::out);
+    std::stringstream ss;
+    ss << "start_position stop_position energy probability\n";
+    for (int i=0; i < rloop_structures.size(); i++){
+        ss << rloop_structures[i].position.start_pos << ' ' << rloop_structures[i].position.end_pos << ' ' <<
+           rloop_structures[i].free_energy << ' ' << rloop_structures[i].probability << endl;
+    }
+    dumpfile << ss.rdbuf();
+    dumpfile.close();
+}
+

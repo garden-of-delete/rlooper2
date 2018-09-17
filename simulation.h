@@ -28,6 +28,8 @@ private:
     bool circular_flag;
     bool residuals;
     bool auto_domain_size;
+    bool dump;
+    bool average_g;
     //member functions
     void compute_signal_bpprobs(Gene &gene, vector<double> *&signal);
     void compute_signal_average_G(Gene &gene, vector<double> *&signal);
@@ -69,6 +71,8 @@ public:
     void set_circular(); //this should take a boolean
     void set_residuals(bool value);
     void set_auto_domain_size(bool value);
+    void set_dump(bool value);
+    void set_average_g(bool value);
     void set_top(int n);
     void reverse_input();
     void complement_input();

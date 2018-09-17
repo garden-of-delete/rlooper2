@@ -106,6 +106,8 @@ public:
 
     void clear_sequence();
 
+    void dump_structures(string outfilename);
+
 };
 
 
