@@ -4,7 +4,15 @@
 R-looper is an application designed to enable theoretical analysis of R-loops and R-loop forming regions. The suite contains different applications that share a common code base. Each application in the suite is described below R-looper is compatible only with UNIX based architectures (Linux, OSX, etc), and must be compiled on the user's machine.
  
 ## Installation
-TBD
+Prerequisites:
+- Unix based system (Ubuntu, OSX, etc)
+- Install git if required: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+
+To install follow these steps:
+1. Open a terminal, and navigate into a directory where you want the software to be.
+2. clone the repository onto a directory on your computer, using `git pull https://github.com/vopler/rlooper2 master`.
+3. Build the software using `make all`
+4. If the build was successful (no error messages), a new directory should have been created within your working directory called `bin`. The executable `rlooper` should be within that directory, and can now be moved anywhere on your computer and executed with the arguments described below. 
 
 ## Arguments
 ### Required
@@ -12,6 +20,8 @@ The first argument is the path of the input file, which should be a fasta format
 
 As an example: `>HG19_AIRN_PFC53_REVERSE_dna range=PFC53FIXED:1-3908 5'pad=0 3'pad=0 strand=- repeatMasking=none`
 This header specifies the gene name (HG19_AIRN_PFC53_REVERSE), the coordinates (chromosome PFC53FIXED, bases 1-3908), and the strand ('-'). 
+
+When downloading a sequence from the genome browser, make sure to select 
 
 The second argument is the name that will be used as the base for the output .bed files and genome browser tracks. Specify the name with no file extension, appropriate file extensions will be appended automatically.
 
@@ -41,8 +51,12 @@ The second argument is the name that will be used as the base for the output .be
 
 `--top` followed by some integer n, indicates that information about the top n most favorable single R-loop structures should be outputted to stdout. Useful to get a sense of how the most favorabl structures over the sequence are distributed in position and energy.
 
-## Example Usage
+`--dump` dumps the full statistical ensemble (every possible single R-loop structure) to a file for analysis. It provides the start location, stop location, energy, and probability of each structure, and the structures are sorted by decreasing probability. 
 
+`--localaverageenergy` adds an aditional signal to the output as a .wig file. This signal is a measure of local average energy, and can supplement the base pair involvement probability. Disabled by default because it is a computationally expensive signal to compute.
+
+## Example Usage
+`bin/rlooper sequences/pFC19_full.fa results/pfc53_full_auto_scneg0.07_phys --sigma -0.07 --a 10 --N auto --minlength 2 --bedfile --sensitivity 12`
 
 ## Contributors
 
