@@ -22,8 +22,8 @@ bin:
 	mkdir -p bin
 
 rlooper: bin $(OBJS) ensemble_analyzer_main.o
-	@echo Build ensemble_analyzer.
-	$(CC) -o bin/ensemble_analyzer $(CFLAGS) $(OBJS) ensemble_analyzer_main.o
+	@echo Build rlooper.
+	$(CC) -o bin/rlooper $(CFLAGS) $(OBJS) ensemble_analyzer_main.o
 clean: 
 	@echo Clean.
 	rm -f *.o *.a tests/*.o
