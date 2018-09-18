@@ -6,24 +6,24 @@ R-looper is an application designed to enable theoretical analysis of R-loops an
 ## Installation
 Prerequisites:
 - Unix based system (Ubuntu, OSX, etc)
-- Install git if required: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+- Install git if required: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git. Use git to pull the repository. 
+- OR unzip the downloaded repository
 
 To install follow these steps:
-1. Open a terminal, and navigate into a directory where you want the software to be.
-2. clone the repository onto a directory on your computer, using `git pull https://github.com/vopler/rlooper2 master`.
-3. Build the software using `make all`
-4. If the build was successful (no error messages), a new directory should have been created within your working directory called `bin`. The executable `rlooper` should be within that directory, and can now be moved anywhere on your computer and executed with the arguments described below. 
+1. Open a terminal, and use the `cd` command to navigate into the directory where the software has been downloaded and/or unzipped. 
+2. Build the software using `make all`
+4. If the build was successful (no error messages), a new directory should have been created within your rlooper directory called `bin`. The executable `rlooper` should be within that directory, and can now be moved anywhere on your computer and executed from the terminal with the arguments described below. 
 
 ## Arguments
 ### Required
-The first argument is the path of the input file, which should be a fasta formatted DNA sequence. The header should contain the name of the sequence, coordinates, and which is the template strand. The sequence will be automatically handled correctly based on the provided orientation of the template strand. TODO: Make the header parser more flexible. 
+The **first argument** is the path of the input file, which should be a fasta formatted DNA sequence. The header should contain the name of the sequence, coordinates, and which is the template strand. The sequence will be automatically handled correctly based on the provided orientation of the template strand. TODO: Make the header parser more flexible. 
 
 As an example: `>HG19_AIRN_PFC53_REVERSE_dna range=PFC53FIXED:1-3908 5'pad=0 3'pad=0 strand=- repeatMasking=none`
 This header specifies the gene name (HG19_AIRN_PFC53_REVERSE), the coordinates (chromosome PFC53FIXED, bases 1-3908), and the strand ('-'). 
 
-When downloading a sequence from the genome browser, make sure to select 
+When downloading a sequence from the genome browser, make sure to download the sequence with no repeat masking.  
 
-The second argument is the name that will be used as the base for the output .bed files and genome browser tracks. Specify the name with no file extension, appropriate file extensions will be appended automatically.
+The **second argument** is the name that will be used as the base for the output .bed files and genome browser tracks. Specify the name with no file extension, appropriate file extensions will be appended automatically.
 
 ### Optional
 #### Biophysical Parameters
@@ -43,7 +43,7 @@ The second argument is the name that will be used as the base for the output .be
 
 `--bedfile` indicates to the software that peaks corresponding with regions of high r-loop favorability should be called and outputted to a .bed formatted file. 
 
-`--sensitivity` is used only when `--bedfile` is speficied and specifies the sensitivity of the threshold-based peak caller. PROVIDE EXAMPLES AND A USAGE GUIDE HERE
+`--sensitivity` is used only when `--bedfile` is speficied and specifies the sensitivity of the threshold-based peak caller. 10 seems to be a good default value when calling peaks. 
 
 `--residuals` computes and outputs residual quantities to stdout. These quantities describe the expected amount of remaining superhlicity in a molecule consisting of the provided sequence, devided between twist and writhe. Can be easily used to determine how much relaxation would be expected on this molecule if single R-loops were allowed to form. 
 
@@ -56,7 +56,11 @@ The second argument is the name that will be used as the base for the output .be
 `--localaverageenergy` adds an aditional signal to the output as a .wig file. This signal is a measure of local average energy, and can supplement the base pair involvement probability. Disabled by default because it is a computationally expensive signal to compute.
 
 ## Example Usage
-`bin/rlooper sequences/pFC19_full.fa results/pfc53_full_auto_scneg0.07_phys --sigma -0.07 --a 10 --N auto --minlength 2 --bedfile --sensitivity 12`
+Suppose that you wanted to run R-looper on a FASTA formatted sequence file, "pfc53.fa", and output the results to a set of files using `pfc53_output` as the base name. Suppose also that you want to assume negative 7% superhelical density over the 1500nt (default superhelical domain size). You would use the following:
+`rlooper pFC53_full.fa pfc53_output --sigma -0.07`
+
+Now suppose you wanted to alter the cost of the DNA:RNA DNA:DNA junctions at each end of the R-loop from the default value (10 kcal/mol) to a higher value (20kcal/mol) and use a superhelical domain that is scaled to the length of the sequence to hold the superhelical density constant at -7%. Suppose you also wanted to compute the more costly "local average energy" signal over the sequence. 
+`rlooper pFC53_full.fa pfc53_output --sigma -0.07 --a 20 --N auto --localaverageenergy`
 
 ## Contributors
 
