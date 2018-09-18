@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[i], "--dump")) {
             sim.set_dump(true);
         }
-        else if (!strcmp(argv[i], "--averageenergy")) {
+        else if (!strcmp(argv[i], "--localaverageenergy")) {
             sim.set_average_g(true);
         }
         else{

@@ -416,14 +416,14 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     ofstream outfile2(outfilename+"_avgG.wig",ios::out);
     ofstream outfile3(outfilename+"_mfe.wig",ios::out);
     ofstream outfile4(outfilename+"_bpprob.bed",ios::out);
-    ofstream outfile6(outfilename+"_mfe.bed",ios::out);
+    ofstream outfile5(outfilename+"_mfe.bed",ios::out);
 
     //write headers
     write_wigfile_header(outfile1,"signal1_"+outfilename);
     write_wigfile_header(outfile2,"signal2_"+outfilename);
     write_wigfile_header(outfile3,"signal3_"+outfilename);
     write_bedfile_header(outfile4,"signal1_peaks_"+outfilename);
-    write_bedfile_header(outfile6,"signal3_peaks_"+outfilename);
+    write_bedfile_header(outfile5,"signal3_peaks_"+outfilename);
 
     bool eof = false;
     if (models.size() < 1){
@@ -502,7 +502,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             peaks.clear();
             call_peaks_threshold(*this_gene,*signal3,peaks); //possible null pointer exception generated here
             //write to bedfile
-            write_bedfile(outfile6,this_gene,peaks);
+            write_bedfile(outfile5,this_gene,peaks);
         }
         cout << "complete!" << endl;
         //output residuals if the option is selected
