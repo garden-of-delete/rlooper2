@@ -35,6 +35,8 @@ private:
     void compute_signal_average_G(Gene &gene, vector<double> *&signal);
     void compute_signal_mfe(Gene &gene, vector<double> *&signal);
     void call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks);
+    void call_peaks_absolute_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks);
+
     /**
      * writes a given signal for a given gene to the outfile in .wig format
      * @param   gene    the gene from which to derive the header in the wigfile

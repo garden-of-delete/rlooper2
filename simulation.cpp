@@ -188,6 +188,30 @@ void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector
     }
 }
 
+void Simulation::call_peaks_absolute_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks){
+    //int power_threshold = 12; //needs to be made a class variable
+    double minimum = 1;
+    bool in_peak = false;
+    long peak_start=0, peak_end=0;
+    double magnitude = 0;
+    Structure* temp;
+    for (int i=0; i < signal.size(); i++){
+        if (signal[i] > 1*pow(10,power_threshold)){ //the signal is significant
+            if (!in_peak){
+                in_peak = true;
+                peak_start = gene.getPosition().start_pos + i;
+            }
+        }
+        else{ //the signal is not significant
+            if (in_peak){
+                in_peak = false;
+                peak_end = gene.getPosition().start_pos + i;
+                peaks.emplace_back(Loci(gene.getPosition().chromosome,gene.getPosition().strand, peak_start, peak_end)); //chromosome, strand, start_pos, end_pos
+            }
+        }
+    }
+}
+
 void Simulation::cluster_k_intervals(vector<Loci> &peaks, vector<Loci> &clustered_peaks){
     long long int seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::cout << "rng seed: " << seed << endl;
@@ -397,6 +421,7 @@ void Simulation::write_bedfile(ofstream& outfile, Gene* gene, vector<Loci>& peak
     }
     ss << "browser position " << gene->getPosition().chromosome << ':' << gene->getPosition().start_pos << '-' <<
        gene->getPosition().end_pos << endl;
+    ss << '#' << gene->getName() << endl;
     //print BED header here
     //print the peaks in BED format
     for (int i=0; i < peaks.size(); i++){
@@ -496,11 +521,11 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         write_wigfile(outfile3,this_gene,signal3);
         //call peaks and write results to .bed files
         if (bedfile){
-            call_peaks_threshold(*this_gene,*signal,peaks); //possible null pointer exception generated here
+            call_peaks_absolute_threshold(*this_gene,*signal,peaks); //possible null pointer exception generated here
             //write to bedfile
             write_bedfile(outfile4,this_gene,peaks);
             peaks.clear();
-            call_peaks_threshold(*this_gene,*signal3,peaks); //possible null pointer exception generated here
+            call_peaks_absolute_threshold(*this_gene,*signal3,peaks); //possible null pointer exception generated here
             //write to bedfile
             write_bedfile(outfile5,this_gene,peaks);
         }

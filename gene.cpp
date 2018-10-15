@@ -125,7 +125,7 @@ bool Gene::read_gene(ifstream& fastafile) { //need to test
             sequence.push_back(c);
         }
             //else if encountered some white space
-        else if (c == '\n' || c == ' ' || c == '\t'){
+        else if (c == '\n' || c == ' ' || c == '\t' || c== '\r'){
             p = fastafile.peek();
             if (p == '>'){
                 windower.set_sequence(sequence);
