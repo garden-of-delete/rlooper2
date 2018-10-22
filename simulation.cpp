@@ -354,6 +354,7 @@ void Simulation::write_wigfile(ofstream& outfile, Gene* gene, std::vector<double
     //adjust browser position
     ss << "browser position " << gene->getPosition().chromosome << ':' << gene->getPosition().start_pos << '-' <<
        gene->getPosition().end_pos << endl;
+    ss << '#' << gene->getName() << endl;
     ss << "fixedStep chrom=" << gene->getPosition().chromosome << " start=" << gene->getPosition().start_pos << " step=1"
        << endl;
     for (int i = 0; i < signal->size(); i++) {
