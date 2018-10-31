@@ -11,6 +11,7 @@ Windower::Windower(std::vector<char> &target_sequence){
     current_start = target_sequence.begin();
     current_stop = current_start + min_window_size-1;
     is_circular = false;
+    sliding_window_size = 0;
 }
 
 int Windower::get_min_window_size(){

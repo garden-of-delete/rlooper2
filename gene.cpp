@@ -182,6 +182,7 @@ void Gene::compute_structures_circular(Model &model){ //not working
     //check for circular sequence conditions
     if (sequence.size() == 0){
         //throw exception
+
     }
     //initializing the iterators ensures that the intial comparison in next_window_from_all_windows is not problematic
     std::vector<char>::iterator start = sequence.begin(),stop=sequence.begin()+1;
@@ -199,7 +200,7 @@ void Gene::compute_structures_circular(Model &model){ //not working
         //push the now computed structure onto these_structures
         rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
     }
-    cout << rloop_structures.size() << endl;
+    cout << rloop_structures.size() << endl; //DEBUG
 }
 
 void Gene::compute_residuals(Model &model){

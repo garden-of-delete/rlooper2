@@ -729,7 +729,7 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
 
 void Simulation::simulation_D(){
     //process input sequence
-
+    //compute full ensemble of structures
     //simulate n rounds of transcription
         //set initial sliding window
         //while polymerase not at the end of the gene
