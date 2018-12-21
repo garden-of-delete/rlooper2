@@ -48,6 +48,8 @@ The **second argument** is the name that will be used as the base for the output
 
 `--minlength` followed by an integer specifies the size of R-loops in base-pairs below which should be excluded from the biophysical ensemble. The default if unspecified is 2bp, which is the full ensemble. 
 
+`--unconstrained` is a parameter that removes the superhelicity term from the energy calculation, leaving only the base-pairing energetics and the nucleation free energy (which is subtracted from the ground-state). This is useful to better represent substrate molecules that are topologically unconstrainted, such as nicked circular or linear pieces of DNA. 
+
 #### Sequence Handling Overrides
 
 `--reverse` reverses the transcribed orientation of the provided input sequence.
@@ -60,7 +62,6 @@ The **second argument** is the name that will be used as the base for the output
 
 `--circular` treats the provided of sequence as circular by adding an additional set of r-loop structures to the ensemble that would span the boundry between the beginning and end of the sequence if the sequence is circular. Useful in a case where a small circular molecule is being transcribed and a region of energetic favorability spans the end of the provided sequence.
 
-
 #### Analysis Options
 `--bedfile` indicates to the software that peaks corresponding with regions of high r-loop favorability should be called and outputted to a .bed formatted file. 
 
@@ -68,9 +69,9 @@ The **second argument** is the name that will be used as the base for the output
 
 `--residuals` computes and outputs residual quantities to stdout. These quantities describe the expected amount of remaining superhlicity in a molecule consisting of the provided sequence, devided between twist and writhe. Can be easily used to determine how much relaxation would be expected on this molecule if single R-loops were allowed to form. 
 
-`--top` followed by some integer n, indicates that information about the top n most favorable single R-loop structures should be outputted to stdout. Useful to get a sense of how the most favorabl structures over the sequence are distributed in position and energy.
+`--top` followed by some integer `n`, indicates that information about the top `n` most favorable single R-loop structures should be outputted to stdout. Useful to get an overarching sense of how the most favorable structures over the sequence are distributed in position and energy.
 
-`--dump` dumps the full statistical ensemble (every possible single R-loop structure) to a file for analysis. It provides the start location, stop location, energy, and probability of each structure, and the structures are sorted by decreasing probability. 
+`--dump` dumps the full statistical ensemble (every possible single R-loop structure) to a file for analysis. It provides the start location, stop location, energy, and probability of each structure, and the structures are sorted by decreasing probability. The Energy of the B-duplex (but not probability) which serves as the ground-state for the ensemble is provided as the first entry, with start and stop location 0. 
 
 `--localaverageenergy` adds an aditional signal to the output as a .wig file. This signal is a measure of local average energy, and can supplement the base pair involvement probability. Disabled by default because it is a computationally expensive signal to compute.
 
@@ -78,7 +79,21 @@ The **second argument** is the name that will be used as the base for the output
 
 This software is developed and maintained by Robert Stolz (rstolzATucdavis.edu). 
 
-Development of this software was funded in part by NIH grant XXX and NSF grants XXX and XXX. 
+Development of this software was funded in part by NIH grant GM120607 and NSF CAREER grant DMS1057284. 
 
 ## License
-All rights reserved 2018
+    R-looper
+    Copyright (C) 2018 Robert Stolz
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    The license can be found at https://www.gnu.org/licenses/gpl-3.0.en.html. 
+    By downloading or using this software, you agree to the terms and conditions of the license. 
