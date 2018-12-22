@@ -71,7 +71,7 @@ The **second argument** is the name that will be used as the base for the output
 
 `--top` followed by some integer `n`, indicates that information about the top `n` most favorable single R-loop structures should be outputted to stdout. Useful to get an overarching sense of how the most favorable structures over the sequence are distributed in position and energy.
 
-`--dump` dumps the full statistical ensemble (every possible single R-loop structure) to a file for analysis. It provides the start location, stop location, energy, and probability of each structure, and the structures are sorted by decreasing probability. The Energy of the B-duplex (but not probability) which serves as the ground-state for the ensemble is provided as the first entry, with start and stop location 0. 
+`--dump` dumps the full statistical ensemble (every possible single R-loop structure) to a file for analysis. It provides the start location, stop location, energy, and probability of each structure relative to the input sequence, and the structures are sorted by decreasing probability. The Energy of the B-duplex (but not probability) which serves as the ground-state for the ensemble is provided as the first entry, with start and stop location 0. 
 
 `--localaverageenergy` adds an aditional signal to the output as a .wig file. This signal is a measure of local average energy, and can supplement the base pair involvement probability. Disabled by default because it is a computationally expensive signal to compute.
 
