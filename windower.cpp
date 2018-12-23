@@ -33,7 +33,7 @@ void Windower::set_sequence(std::vector<char>& target_sequence){ //not working?
     current_sequence = &target_sequence;
     current_start = target_sequence.begin();
     current_stop = current_start + min_window_size - 2;
-    sequence_size = current_sequence->size();
+    sequence_size = target_sequence.size();
 }
 
 bool Windower::has_next_window(){
@@ -97,7 +97,7 @@ void Windower::next_window_from_all_windows_circular(std::vector<char>::iterator
     }
     start = current_start;
     stop = current_stop;
-    //print_current_window();
+    print_current_window();
     return;
 }
 

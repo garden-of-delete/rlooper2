@@ -20,6 +20,7 @@ private:
     Loci position;
     std::vector<char> sequence;
     std::vector<Structure> rloop_structures;
+    long double ground_state_energy;
 private:
 
     /**
@@ -62,8 +63,9 @@ public:
      */
     void compute_structures(Model& model);
 
-    void compute_structures_circular(Model& model);
+    vector<Structure> compute_structures_dynamic(Model& model, vector<char> input_sequence);
 
+        void compute_structures_circular(Model& model);
     /**
      * computes residual twist and superhelicity for the ensemble
      */

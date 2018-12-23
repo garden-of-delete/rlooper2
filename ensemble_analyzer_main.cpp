@@ -55,6 +55,9 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[i], "--bedfile")) {
             sim.set_bedfile(true);
         }
+        else if (!strcmp(argv[i], "--unconstrained")) {
+            model.set_unconstrained(true);
+        }
         else if (!strcmp(argv[i], "--circular")) {
             sim.set_circular();
         }
@@ -82,7 +85,8 @@ int main(int argc, char* argv[]) {
     }
     sim.add_model(model);
     if (sandbox){
-        sim.sandbox();
+        //sim.sandbox();
+        sim.simulation_D();
         return 0;
     }
     sim.simulation_A();

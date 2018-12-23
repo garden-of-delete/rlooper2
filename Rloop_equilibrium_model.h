@@ -39,6 +39,7 @@ protected:
     double rUA_dAT;
     double rUU_dAA;
     bool homopolymer_override;
+    bool unconstrained;
     double override_energy;
 
 public:
@@ -61,15 +62,18 @@ public:
     void setT(double T);
     void seta(double a);
     void set_superhelicity(double sigma);
+    void set_unconstrained(bool value);
     void setAlpha(double alpha);
     void set_bp_energy_override(double energy);
 
     //member functions
+    int find_distance(vector<char>& sequence,const vector<char>::iterator& first, const vector<char>::iterator& second, Structure& structure);
     double step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second);
     double compute_bps_interval(const char &first, const char &second);
-    void compute_structure(const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure);
+    void compute_structure(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure);
     void compute_residuals(Structure& structure);
     void ground_state_residuals(double& twist, double& writhe);
     long double ground_state_factor();
+    long double ground_state_energy();
 };
 #endif //RLOOPER2_MODEL_H

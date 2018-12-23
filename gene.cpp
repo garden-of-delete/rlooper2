@@ -114,7 +114,7 @@ bool Gene::read_gene(ifstream& fastafile) { //need to test
         //if the character is the start of a header line
         if (c == '>') {
             //read until the end of the header line
-            while (c != '\n') {
+            while (c != '\n' && c != '\r') {
                 header.push_back(c);
                 c = toupper(fastafile.get());
             }
@@ -172,11 +172,40 @@ void Gene::compute_structures(Model &model){
         temp.position.start_pos = position.start_pos + windower.get_current_start_offset();
         temp.position.end_pos = position.start_pos + windower.get_current_stop_offset();
         //pass the structure and window boundaries to the model
-        model.compute_structure(start,stop,temp);
+        model.compute_structure(sequence,start,stop,temp);
         //push the now computed structure onto these_structures
         rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
     }
+    ground_state_energy = model.ground_state_energy();
 }
+
+vector<Structure> Gene::compute_structures_dynamic(Model& model, vector<char> input_sequence){
+    vector<Structure> temp_structures;
+    Windower temp_windower;
+    temp_windower.set_sequence(input_sequence);
+    //check for circular sequence conditions
+    if (input_sequence.size() == 0){
+        //throw exception
+    }
+    //initializing the iterators ensures that the intial comparison in next_window_from_all_windows is not problematic
+    std::vector<char>::iterator start = input_sequence.begin(),stop=input_sequence.begin()+1;
+    temp_windower.reset_window();
+    while (temp_windower.has_next_window()){
+        temp_windower.next_window_from_all_windows(start,stop);
+        Structure temp;
+        //set the Loci of the structure using the gene's Loci
+        temp.position.chromosome = position.chromosome;
+        temp.position.strand = position.strand;
+        temp.position.start_pos = position.start_pos + windower.get_current_start_offset();
+        temp.position.end_pos = position.start_pos + windower.get_current_stop_offset();
+        //pass the structure and window boundaries to the model
+        model.compute_structure(sequence,start,stop,temp);
+        //push the now computed structure onto these_structures
+        temp_structures.push_back(temp); //need to make sure the default copy constructor is working properly
+    }
+    return temp_structures;
+}
+
 
 void Gene::compute_structures_circular(Model &model){ //not working
     //check for circular sequence conditions
@@ -196,7 +225,7 @@ void Gene::compute_structures_circular(Model &model){ //not working
         temp.position.start_pos = position.start_pos + windower.get_current_start_offset();
         temp.position.end_pos = position.start_pos + windower.get_current_stop_offset();
         //pass the structure and window boundaries to the model
-        model.compute_structure(start,stop,temp);
+        model.compute_structure(sequence,start,stop,temp);
         //push the now computed structure onto these_structures
         rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
     }
@@ -250,9 +279,23 @@ void Gene::dump_structures(string outfilename){
     ofstream dumpfile(outfilename + gene_name + "_dump.txt",ios::out);
     std::stringstream ss;
     ss << "start_position stop_position energy probability\n";
-    for (int i=0; i < rloop_structures.size(); i++){
-        ss << rloop_structures[i].position.start_pos << ' ' << rloop_structures[i].position.end_pos << ' ' <<
-           rloop_structures[i].free_energy << ' ' << rloop_structures[i].probability << endl;
+    ss << "0 0 " << ground_state_energy << ' ' << 0 << endl; //add the ground state probabilit
+    if (position.strand == "+") {
+        for (int i = 0; i < rloop_structures.size(); i++) {
+            ss << rloop_structures[i].position.start_pos << ' ' << rloop_structures[i].position.end_pos << ' ' <<
+               rloop_structures[i].free_energy << ' ' << rloop_structures[i].probability << endl;
+        }
+    }
+    else if (position.strand == "-") {
+        for (int i = 0; i < rloop_structures.size(); i++) {
+            ss << sequence.size()-rloop_structures[i].position.end_pos << ' '
+               << sequence.size()-rloop_structures[i].position.start_pos << ' ' <<
+               rloop_structures[i].free_energy << ' ' << rloop_structures[i].probability << endl;
+        }
+    }
+    else {
+        cout << "Dump error. Strand unspecified.";
+        exit(1); //replace with exception
     }
     dumpfile << ss.rdbuf();
     dumpfile.close();

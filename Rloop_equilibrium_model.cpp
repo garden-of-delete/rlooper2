@@ -35,6 +35,7 @@ Rloop_equilibrium_model::Rloop_equilibrium_model() {
     rUA_dAT = .28;
     rUU_dAA = .8;
     homopolymer_override = false;
+    unconstrained = false;
     override_energy = 0.0;
 }
 
@@ -94,6 +95,10 @@ void Rloop_equilibrium_model::set_superhelicity(double sigma) {
     setAlpha(N*sigma*A);
 }
 
+void Rloop_equilibrium_model::set_unconstrained(bool value){
+    unconstrained = value;
+}
+
 void Rloop_equilibrium_model::setAlpha(double alpha) {
     Rloop_equilibrium_model::alpha = alpha;
 }
@@ -105,6 +110,18 @@ double Rloop_equilibrium_model::getT() const {
 void Rloop_equilibrium_model::setT(double T) {
     Rloop_equilibrium_model::T = T;
     k = (2200 * 0.0019858775 * T) / N;
+}
+
+int Rloop_equilibrium_model::find_distance(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
+    std::vector<char>::iterator b_0;
+    int n=1;
+    for (b_0=start; b_0 != stop; b_0++) {
+        n++;
+        if (b_0 == sequence.end()) { //if you reach the end of the sequence, go back to the beginning
+            b_0 = sequence.begin();
+        }
+    }
+    return n;
 }
 
 double Rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second){
@@ -170,14 +187,19 @@ void Rloop_equilibrium_model::set_bp_energy_override(double energy){
     override_energy = energy;
 }
 
-void Rloop_equilibrium_model::compute_structure(const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
+void Rloop_equilibrium_model::compute_structure(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
     std::vector<char>::iterator b_0;
     //get boundaries of the sequence for this structure
-    long int m = std::distance(start,stop);
+    long int m = find_distance(sequence,start,stop,structure); //need to make boundary aware, draw this value from windower
     //compute the superhelicity term
-    structure.free_energy = (2 * pow(M_PI, 2)*C*k*pow((alpha + m*A), 2)) / (4 * pow(M_PI, 2) *C + k*m);
+    if (!unconstrained) {
+        structure.free_energy = (2 * pow(M_PI, 2) * C * k * pow((alpha + m * A), 2)) / (4 * pow(M_PI, 2) * C + k * m);
+    }
     //compute the base-pairing energy in a loop over the sequence in the boundary
-    for (b_0=start; b_0 < stop; b_0++){
+    for (b_0=start; b_0 != stop; b_0++){
+        if (b_0 == sequence.end()){ //if you reach the end of the sequence, go back to the beginning
+            b_0 = sequence.begin();
+        }
         structure.free_energy += step_forward_bps(b_0,b_0+1);
         structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
     }
@@ -195,4 +217,8 @@ void Rloop_equilibrium_model::ground_state_residuals(double &twist, double &writ
 
 long double Rloop_equilibrium_model::ground_state_factor(){
     return compute_boltzmann_factor(((k*pow(alpha, 2)) / 2) - a,T);
+}
+
+long double Rloop_equilibrium_model::ground_state_energy(){
+    return ((k*pow(alpha, 2)) / 2) - a;
 }

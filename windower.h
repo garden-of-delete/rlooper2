@@ -11,7 +11,7 @@
 
 class Windower {
 private:
-    int min_window_size, current_window_size, sequence_size, sliding_window_size; //must be at least 2
+    long int min_window_size, current_window_size, sequence_size, sliding_window_size; //must be at least 2
     std::vector<char>* current_sequence;
     std::vector<char>::iterator current_start, current_stop;
     bool is_circular;

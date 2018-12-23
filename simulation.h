@@ -22,6 +22,7 @@ private:
     string outfilename;
     int minlength, power_threshold; //a minimum loop length to be applied simulation-wide.
     int top; //indicates how many of the most favorable structures to output when the --top option is used
+    int seed; //for use in dynamic simulation
     bool reverse_flag;
     bool complement_flag;
     bool bedfile;
@@ -76,6 +77,7 @@ public:
     void set_dump(bool value);
     void set_average_g(bool value);
     void set_top(int n);
+    void set_seed(int n);
     void reverse_input();
     void complement_input();
     std::vector<Model*> get_models();

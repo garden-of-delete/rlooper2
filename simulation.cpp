@@ -18,6 +18,7 @@ Simulation::Simulation(){
     top = 0;
     dump = false;
     average_g = false;
+    seed = 0;
 }
 
 Simulation::~Simulation(){
@@ -64,6 +65,10 @@ void Simulation::set_dump(bool value){
 
 void Simulation::set_average_g(bool value){
     average_g = value;
+}
+
+void Simulation::set_seed(int value){
+    seed = value;
 }
 
 void Simulation::reverse_input(){
@@ -728,14 +733,136 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
 }
 
 void Simulation::simulation_D(){
-    //process input sequence
-    //compute full ensemble of structures
-    //simulate n rounds of transcription
-        //set initial sliding window
-        //while polymerase not at the end of the gene
-            //if not in an r-loop, compute the energetic character of the current window
-                //decide if R-loop initiates and set flags
-            //else if in an r-loop, compute the energetic character of the current window and weight against the character of the whole structure
+    //process input sequence vvv
+    if (!infile.is_open()){
+        throw UnexpectedClosedFileException("Simulation::simulation_D");
+    }/*
+    ofstream outfile1(outfilename+"_bpprob.wig",ios::out);
+    ofstream outfile2(outfilename+"_avgG.wig",ios::out);
+    ofstream outfile3(outfilename+"_mfe.wig",ios::out);
+    ofstream outfile4(outfilename+"_bpprob.bed",ios::out);
+    ofstream outfile5(outfilename+"_mfe.bed",ios::out);
+
+    //write headers
+    write_wigfile_header(outfile1,"signal1_"+outfilename);
+    write_wigfile_header(outfile2,"signal2_"+outfilename);
+    write_wigfile_header(outfile3,"signal3_"+outfilename);
+    write_bedfile_header(outfile4,"signal1_peaks_"+outfilename);
+    write_bedfile_header(outfile5,"signal3_peaks_"+outfilename);
+    */
+    bool eof = false;
+    if (models.size() < 1){
+        //throw exception
+    }
+    //do while !eof
+    while(eof == false) {
+        //allocate new gene
+        Gene *this_gene = new Gene();
+        this_gene->windower.set_min_window_size(minlength);
+        //read gene
+        eof = this_gene->read_gene(infile);
+        cout << "processing input sequence: " << this_gene->getName() << "...";
+        //compute structures using models
+        if (this_gene->getPosition().strand == "+") {
+            this_gene->complement_sequence();
+        } else if (this_gene->getPosition().strand == "-") {
+            this_gene->invert_sequence();
+        }
+        if (auto_domain_size){
+            static_cast<Rloop_equilibrium_model*>(models[0])->setN(this_gene->get_length()); //need to compute this from the actual sequence.
+        }
+        if (complement_flag) {
+            this_gene->complement_sequence();
+        }
+        if (reverse_flag) {
+            this_gene->invert_sequence();
+        }
+        if (circular_flag) {
+            //this_gene->compute_structures_circular(*models[0]);
+        } else {
+            //this_gene->compute_structures(*models[0]);
+        }
+        if(seed == 0) {
+            seed = time(NULL);
+        }
+        cout << "Seed: " << seed << endl;
+
+        int n_simulations = 1000; // placeholder
+        int w = 15; //placeholder
+        int s1 = 1; //placeholder
+        int s2 = 10; // placeholder
+        double transcriptional_superhelicity = -0.01; //placeholder
+        double ambient_linking_difference = static_cast<Rloop_equilibrium_model*>(models[0])->getAlpha();
+
+        //run simulation n_times
+        for (int i=0; i < n_simulations; i++) {
+            cout << "Simulation " << i+1 << ' ';
+            //initialize simulation variables
+            int current_pos = w-1;
+            double current_partition_function = 0.0;
+            bool in_rloop = false;
+            vector<char> current_window_sequence;
+            vector<Structure> structures_1, structures_2;
+
+
+            //set initial position and window
+            while (current_pos < this_gene->getSequence().size()-1) { //until end of sequence
+                current_partition_function = 0.0;
+                current_window_sequence.clear();
+                //if not last window ???
+
+                //if not in r-loop
+                //compute P(all R-loop structures)/(P(all R-loop strucutures)+P(no rloop))
+                //sequence copy step (placeholder)
+                for (int j=current_pos-w+1; j <= current_pos; j++){
+                    current_window_sequence.push_back(this_gene->getSequence()[j]);
+                }
+                //set superhelicity parameters
+                double current_linking_difference = ambient_linking_difference +
+                                                    ((current_pos-1)*transcriptional_superhelicity*static_cast<Rloop_equilibrium_model*>(models[0])->getA());
+                static_cast<Rloop_equilibrium_model*>(models[0])->setAlpha(current_linking_difference);
+                structures_1 = this_gene->compute_structures_dynamic(*models[0],current_window_sequence);
+                for (int j=0; j < structures_1.size(); j++){
+                    current_partition_function += structures_1[j].boltzmann_factor;
+                }
+                current_partition_function += models[0]->ground_state_factor();
+                double urn  = ((double)rand()/(double)RAND_MAX); //uniform random number on [0,1]
+                double test = (1-models[0]->ground_state_factor()/current_partition_function); //p(r-loop states)
+                //DEBUG print the probabilities being compared here
+                //cout << "comparison: " << urn << " vs. " << test << endl;
+                if (urn < test){
+                    cout << "initiation at bp: " << current_pos+1 << endl;
+                    in_rloop = true;
+
+                    //debug vvv
+                    current_pos = w-1;
+                    in_rloop = false;
+                    structures_1.clear();
+                    current_pos = this_gene->getSequence().size()-1; // skip to the end
+                    continue;
+                }
+
+                //if are in r-loop
+                //compute P(current r-loop with extension of size s2)/(P(current r-loop with extension of size s2)+P(no extension))
+                //if r-loop has terminated
+                //backtracking logic
+                //create a Structure and push onto vector of R-loops
+                //save R-loop structures to a file, and clear the vector
+                //if not in r-loop
+                if (!in_rloop){
+                    //advance window by step of size s1
+                    current_pos += s1;
+                }
+                else{
+                    //advance window by step of size s2
+                    current_pos += s2;
+                }
+                if (current_pos >= this_gene->getSequence().size()-1){
+                    cout << "initiation at bp: none" << endl;
+                }
+            }
+        }
+    }
 }
 
 void Simulation::sandbox() { //test/debug environment
