@@ -229,7 +229,7 @@ void Gene::compute_structures_circular(Model &model){ //not working
         //push the now computed structure onto these_structures
         rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
     }
-    cout << rloop_structures.size() << endl; //DEBUG
+    //cout << rloop_structures.size() << endl;
 }
 
 void Gene::compute_residuals(Model &model){

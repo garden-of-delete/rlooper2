@@ -115,10 +115,12 @@ void Rloop_equilibrium_model::setT(double T) {
 int Rloop_equilibrium_model::find_distance(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
     std::vector<char>::iterator b_0;
     int n=1;
-    for (b_0=start; b_0 != stop; b_0++) {
-        n++;
-        if (b_0 == sequence.end()) { //if you reach the end of the sequence, go back to the beginning
+    for (b_0=start; b_0 != stop;n++) {
+        if (b_0 == sequence.end()-1) { //boundary condition
             b_0 = sequence.begin();
+        }
+        else{
+            b_0++;
         }
     }
     return n;
@@ -188,7 +190,7 @@ void Rloop_equilibrium_model::set_bp_energy_override(double energy){
 }
 
 void Rloop_equilibrium_model::compute_structure(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
-    std::vector<char>::iterator b_0;
+    std::vector<char>::iterator b_0,b_1;
     //get boundaries of the sequence for this structure
     long int m = find_distance(sequence,start,stop,structure); //need to make boundary aware, draw this value from windower
     //compute the superhelicity term
@@ -196,13 +198,20 @@ void Rloop_equilibrium_model::compute_structure(vector<char>& sequence, const st
         structure.free_energy = (2 * pow(M_PI, 2) * C * k * pow((alpha + m * A), 2)) / (4 * pow(M_PI, 2) * C + k * m);
     }
     //compute the base-pairing energy in a loop over the sequence in the boundary
-    for (b_0=start; b_0 != stop; b_0++){
+    for (b_0=start; b_1 != stop; b_0++){
         if (b_0 == sequence.end()){ //if you reach the end of the sequence, go back to the beginning
             b_0 = sequence.begin();
+            b_1 = b_0+1;
         }
-        structure.free_energy += step_forward_bps(b_0,b_0+1);
-        structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
+        else if (b_0 == sequence.end()-1){
+            b_1 = sequence.begin();
+        }
+        else{
+            b_1 = b_0+1;
+        }
+        structure.free_energy += step_forward_bps(b_0,b_1);
     }
+    structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
 }
 
 void Rloop_equilibrium_model::compute_residuals(Structure &structure){
