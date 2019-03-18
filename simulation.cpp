@@ -461,7 +461,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         //throw exception
     }
     //do while !eof
-    while(eof == false) {
+    while(!eof) {
         //allocate new gene
         Gene *this_gene = new Gene();
         this_gene->windower.set_min_window_size(minlength);
@@ -804,7 +804,6 @@ void Simulation::simulation_D(){
             vector<char> current_window_sequence;
             vector<Structure> structures_1, structures_2;
 
-
             //set initial position and window
             while (current_pos < this_gene->getSequence().size()-1) { //until end of sequence
                 current_partition_function = 0.0;
@@ -817,7 +816,7 @@ void Simulation::simulation_D(){
                 for (int j=current_pos-w+1; j <= current_pos; j++){
                     current_window_sequence.push_back(this_gene->getSequence()[j]);
                 }
-                //set superhelicity parameters
+                //set superhelical parameters
                 double current_linking_difference = ambient_linking_difference +
                                                     ((current_pos-1)*transcriptional_superhelicity*static_cast<Rloop_equilibrium_model*>(models[0])->getA());
                 static_cast<Rloop_equilibrium_model*>(models[0])->setAlpha(current_linking_difference);
@@ -827,9 +826,9 @@ void Simulation::simulation_D(){
                 }
                 current_partition_function += models[0]->ground_state_factor();
                 double urn  = ((double)rand()/(double)RAND_MAX); //uniform random number on [0,1]
-                double test = (1-models[0]->ground_state_factor()/current_partition_function); //p(r-loop states)
-                //DEBUG print the probabilities being compared here
-                //cout << "comparison: " << urn << " vs. " << test << endl;
+                double test = (1-models[0]->ground_state_factor()/current_partition_function); //p(all r-loop states)
+                //cout << "comparison: " << urn << " vs. " << test << endl; // DEBUG print the probabilities being compared here
+
                 if (urn < test){
                     cout << "initiation at bp: " << current_pos+1 << endl;
                     in_rloop = true;
@@ -840,9 +839,11 @@ void Simulation::simulation_D(){
                     structures_1.clear();
                     current_pos = this_gene->getSequence().size()-1; // skip to the end
                     continue;
+                    
                 }
 
                 //if are in r-loop
+
                 //compute P(current r-loop with extension of size s2)/(P(current r-loop with extension of size s2)+P(no extension))
                 //if r-loop has terminated
                 //backtracking logic
