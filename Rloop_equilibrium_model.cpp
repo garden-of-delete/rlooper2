@@ -209,8 +209,21 @@ void Rloop_equilibrium_model::compute_structure(vector<char>& sequence, const st
         else{
             b_1 = b_0+1;
         }
-        structure.free_energy += step_forward_bps(b_0,b_1);
+        structure.bp_energy += step_forward_bps(b_0,b_1);
     }
+    structure.free_energy += structure.bp_energy;
+    structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
+}
+
+void Rloop_equilibrium_model::compute_external_structure(Structure& structure, Structure& rloop, Peak& external){
+    std::vector<char>::iterator b_0,b_1;
+    //get boundaries of the sequence for this structure
+    long int m = rloop.position.get_length();
+    //compute the superhelicity term
+    if (!unconstrained) {
+        structure.free_energy = (2 * pow(M_PI, 2) * C * k * pow((alpha + m * A), 2)) / (4 * pow(M_PI, 2) * C + k * (m-external.position.get_length())) + external.intensity;
+    }
+    structure.free_energy += rloop.bp_energy;
     structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
 }
 

@@ -33,14 +33,16 @@ class Structure{
 public:
     Loci position;
     double free_energy;
+    double bp_energy;
     long double boltzmann_factor;
     double probability;
     double residual_twist;
     double residual_linking_difference;
+    bool external;
     //operators
     bool operator<(const Structure &rhs) const { return free_energy < rhs.free_energy; } //overloaded < operator for sorting
     //constructors
-    Structure(): free_energy(0.), boltzmann_factor(0.), probability(0.), residual_twist(0.), residual_linking_difference(0.) {}
+    Structure(): free_energy(0.), bp_energy(0.), boltzmann_factor(0.), probability(0.), residual_twist(0.), residual_linking_difference(0.), external(false) {}
     Structure(Loci, float, float, float);
 };
 

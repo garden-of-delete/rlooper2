@@ -43,7 +43,7 @@ public:
     void setPosition(const Loci &position);
     const vector<char, allocator<char>> &getSequence() const;
     //void setSequence(const vector<char, allocator<char>> &sequence);
-    vector<Structure>& getStructures();
+    vector<Structure>& getRloopStructures();
     //member functions
     /**
      * Reads the next FASTA record from the input file. Calls parse_header.
@@ -65,7 +65,10 @@ public:
 
     vector<Structure> compute_structures_dynamic(Model& model, vector<char> input_sequence);
 
-        void compute_structures_circular(Model& model);
+    void compute_structures_circular(Model& model);
+
+    void compute_external_structures(vector<Peak>& external_structures, Model& model);
+
     /**
      * computes residual twist and superhelicity for the ensemble
      */

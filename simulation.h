@@ -20,6 +20,7 @@ private:
     std::vector<Gene*> genes;
     ifstream infile;
     string outfilename;
+    string importfilename;
     int minlength, power_threshold; //a minimum loop length to be applied simulation-wide.
     int top; //indicates how many of the most favorable structures to output when the --top option is used
     int seed; //for use in dynamic simulation
@@ -27,6 +28,7 @@ private:
     bool complement_flag;
     bool bedfile;
     bool circular_flag;
+    bool import_flag;
     bool residuals;
     bool auto_domain_size;
     bool dump;
@@ -72,6 +74,7 @@ public:
     void set_minlength(int Minlength);
     void set_power_threshold(int Power_threshold);
     void set_circular(); //this should take a boolean
+    void set_import_flag(bool value, string importfilename);
     void set_residuals(bool value);
     void set_auto_domain_size(bool value);
     void set_dump(bool value);
@@ -82,6 +85,7 @@ public:
     void complement_input();
     std::vector<Model*> get_models();
     void add_model(Model& model);
+    vector<Peak> import_external_structures(string importfilename, Model& model);
 
     //simulation protocols
     /**

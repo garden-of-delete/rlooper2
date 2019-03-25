@@ -77,7 +77,7 @@ const vector<char, allocator<char>> &Gene::getSequence() const {
     return sequence;
 }
 
-vector<Structure>& Gene::getStructures(){
+vector<Structure>& Gene::getRloopStructures(){
     return rloop_structures;
 }
 
@@ -177,6 +177,37 @@ void Gene::compute_structures(Model &model){
         rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
     }
     ground_state_energy = model.ground_state_energy();
+}
+
+void Gene::compute_external_structures(vector<Peak> &external_structures, Model &model){
+    //for each external structure
+    for (int i=0; i < external_structures.size(); i++) {
+        //reset windower position on the sequence
+        //re-coordinate this external structure to match R-looper's internal structures
+        if (position.strand == "-") { //not thoroughly tested
+            external_structures[i].position.start_pos = get_length() - external_structures[i].position.start_pos;
+            external_structures[i].position.end_pos = get_length() - external_structures[i].position.end_pos;
+        }
+        //for every R-loop structure
+        int n_rloop_structures = rloop_structures.size();
+        for (int j=0; j < n_rloop_structures; j++){
+            //cout << j << endl;
+            if (external_structures[i].position.start_pos > rloop_structures[j].position.start_pos &&
+                external_structures[i].position.end_pos < rloop_structures[j].position.end_pos){
+                //cout << "hit" << endl;
+                Structure temp;
+                //set the Loci of the structure using the gene's Loci
+                temp.position.chromosome = position.chromosome;
+                temp.position.strand = position.strand;
+                temp.position.start_pos = rloop_structures[j].position.start_pos;
+                temp.position.end_pos = rloop_structures[j].position.end_pos;
+                //pass the structure and window boundaries to the model
+                model.compute_external_structure(temp, rloop_structures[j], external_structures[i]);
+                //push the now computed structure onto these_structures
+                rloop_structures.push_back(temp); //need to make sure the default copy constructor is working properly
+            }
+        }
+    }
 }
 
 vector<Structure> Gene::compute_structures_dynamic(Model& model, vector<char> input_sequence){

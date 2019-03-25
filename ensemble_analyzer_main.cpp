@@ -78,6 +78,10 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[i], "--localaverageenergy")) {
             sim.set_average_g(true);
         }
+        else if (!strcmp(argv[i], "--import")){
+            sim.set_import_flag(true,argv[i+1]);
+            i++;
+        }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;
             exit(1);

@@ -15,6 +15,7 @@ Simulation::Simulation(){
     power_threshold = 1;
     circular_flag = false;
     auto_domain_size = false;
+    import_flag = false;
     top = 0;
     dump = false;
     average_g = false;
@@ -49,6 +50,11 @@ void Simulation::set_power_threshold(int Power_threshold){
 
 void Simulation::set_circular(){
     circular_flag = true;
+}
+
+void Simulation::set_import_flag(bool value, string filename){
+    import_flag = value;
+    importfilename = filename;
 }
 
 void Simulation::set_residuals(bool value){
@@ -91,12 +97,26 @@ void Simulation::add_model(Model& model){
     models.push_back(&model);
 }
 
+vector<Peak> Simulation::import_external_structures(string importfilename, Model& model){
+    //need to make this more efficient by returning a vector reference
+    ifstream infile(importfilename,ios::in);
+    //parse structure information from infile
+    vector<Peak> temp;
+    long int start,stop;
+    float energy;
+    string chr,sign;
+    while (infile >> chr >> start >> stop >> sign >> energy){
+        temp.push_back(Peak(Loci(chr,sign,start,stop),energy));
+    }
+    return temp;
+}
+
 void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
     signal = new vector<double>(gene.get_length(), 0.0);
     //compute the r-loop involvement probability for each base
     //for each structure in the gene
-    for (std::vector<Structure>::iterator it = gene.getStructures().begin();
-         it < gene.getStructures().end(); ++it) {
+    for (std::vector<Structure>::iterator it = gene.getRloopStructures().begin();
+         it < gene.getRloopStructures().end(); ++it) {
         //for each base in the structure
         for (long int i = it->position.start_pos - gene.getPosition().start_pos;
              i < it->position.end_pos - gene.getPosition().start_pos; i++) {
@@ -115,8 +135,8 @@ void Simulation::compute_signal_average_G(Gene &gene, vector<double> *&signal){
     //compute the special partition function for each base-pair
     vector<double> bp_partition_functions(gene.get_length(), 0.0);
     //for each structure in the gene
-    for (std::vector<Structure>::iterator it = gene.getStructures().begin();
-         it < gene.getStructures().end(); ++it) {
+    for (std::vector<Structure>::iterator it = gene.getRloopStructures().begin();
+         it < gene.getRloopStructures().end(); ++it) {
         //for each base in the structure
         for (long int i = it->position.start_pos - gene.getPosition().start_pos;
              i < it->position.end_pos - gene.getPosition().start_pos; i++) {
@@ -125,8 +145,8 @@ void Simulation::compute_signal_average_G(Gene &gene, vector<double> *&signal){
     }
     //compute the r-loop involvement probability for each base (will probably be moved out of this func later)
     //for each structure in the gene
-    for (std::vector<Structure>::iterator it = gene.getStructures().begin();
-         it < gene.getStructures().end(); ++it) {
+    for (std::vector<Structure>::iterator it = gene.getRloopStructures().begin();
+         it < gene.getRloopStructures().end(); ++it) {
         //for each base in the structure
         for (long int i = it->position.start_pos - gene.getPosition().start_pos;
              i < it->position.end_pos - gene.getPosition().start_pos; i++) {
@@ -144,8 +164,8 @@ void Simulation::compute_signal_mfe(Gene &gene, vector<double> *&signal){
     double current_min = FLT_MAX;
     Structure mfe;
     //for each structure in the gene
-    for (std::vector<Structure>::iterator it = gene.getStructures().begin();
-         it < gene.getStructures().end(); ++it) {
+    for (std::vector<Structure>::iterator it = gene.getRloopStructures().begin();
+         it < gene.getRloopStructures().end(); ++it) {
         if (it->free_energy < current_min){
             current_min = it->free_energy;
             mfe = *it;
@@ -161,7 +181,6 @@ void Simulation::compute_signal_mfe(Gene &gene, vector<double> *&signal){
         std::reverse(signal->begin(), signal->end());
     }
 }
-
 
 void Simulation::call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks){
     //int power_threshold = 12; //needs to be made a class variable
@@ -440,6 +459,7 @@ void Simulation::write_bedfile(ofstream& outfile, Gene* gene, vector<Loci>& peak
 
 void Simulation::simulation_A(){ //some of this code might be migrated into new objects and functions in the future
     //initialize variables
+    vector<Peak> external_structures;
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::simulation_A");
     }
@@ -490,19 +510,25 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         else{
             this_gene->compute_structures(*models[0]);
         }
+        if (import_flag){ //need to eventually match imported structures with their associated genes / plasmids
+            cout << "importing external structures from " << importfilename << "..." << endl;
+            external_structures = import_external_structures(importfilename,*models[0]);
+            this_gene->compute_external_structures(external_structures,*models[0]);
+            cout << "complete!" << endl;
+        }
 
         //ensemble analysis, free energies and boltzmann factors have already been computed in compute_structures
         //compute partition function
         long double partition_function = 0;
         long double sanity_check = 0;
-        for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-             it < this_gene->getStructures().end(); ++it){
+        for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+             it < this_gene->getRloopStructures().end(); ++it){
                partition_function += it->boltzmann_factor;
         }
         partition_function += models[0]->ground_state_factor();
         //compute boltzmann weights and store in the structures
-        for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-             it < this_gene->getStructures().end(); ++it){
+        for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+             it < this_gene->getRloopStructures().end(); ++it){
             it->probability = it->boltzmann_factor/partition_function;
             sanity_check += it->boltzmann_factor/partition_function;
         }
@@ -511,7 +537,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         if (fabs(1-sanity_check) > .00001){
             throw SimulationException("Ensemble probability sum != 1"); //this throw is uncaught
         }
-        std::sort(this_gene->getStructures().begin(),this_gene->getStructures().end());
+        std::sort(this_gene->getRloopStructures().begin(), this_gene->getRloopStructures().end());
         //compute signals and output .wig tracks
         vector<double>* signal = NULL, *signal2 = NULL, *signal3 = NULL;
         vector<Loci> peaks;
@@ -540,8 +566,8 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         if (residuals){
             double ensemble_residual_twist = 0, ensemble_residual_linking_difference=0;
             this_gene->compute_residuals(*models[0]);
-            for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-                 it < this_gene->getStructures().end(); ++it){
+            for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+                 it < this_gene->getRloopStructures().end(); ++it){
                 ensemble_residual_twist += it->residual_twist*it->probability;
                 ensemble_residual_linking_difference += it->residual_linking_difference*it->probability;
             }
@@ -558,26 +584,26 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         }
         if (top > 0){
             //sort top N structures into a new vector
-            std::sort(this_gene->getStructures().begin(),this_gene->getStructures().end());
+            std::sort(this_gene->getRloopStructures().begin(), this_gene->getRloopStructures().end());
             Rloop_equilibrium_model* temp = (Rloop_equilibrium_model*)models[0];
             //output structures to .bed file
             for (int i=0; i < top;i++){
                 // if the sequence has been reversed, output the reversed coordinates for the top structures
                 if (this_gene->getPosition().strand == "-") {
                     cout << this_gene->getSequence().size() -
-                            this_gene->getStructures()[i].position.start_pos << ' '
+                            this_gene->getRloopStructures()[i].position.start_pos << ' '
                          << this_gene->getSequence().size() -
-                            this_gene->getStructures()[i].position.end_pos << ' ';
+                                 this_gene->getRloopStructures()[i].position.end_pos << ' ';
                 }
                 else { //gene is on + strand
-                    cout << this_gene->getStructures()[i].position.start_pos << ' '
-                         << this_gene->getStructures()[i].position.end_pos << ' ';
+                    cout << this_gene->getRloopStructures()[i].position.start_pos << ' '
+                         << this_gene->getRloopStructures()[i].position.end_pos << ' ';
                 }
-                cout << this_gene->getStructures()[i].free_energy << ' '
-                     << this_gene->getStructures()[i].probability << ' '
-                     << this_gene->getStructures()[i].residual_twist << ' '
-                     << this_gene->getStructures()[i].residual_linking_difference << ' '
-                     << this_gene->getStructures()[i].residual_linking_difference / (temp->getN() * temp->getA()) << endl;
+                cout << this_gene->getRloopStructures()[i].free_energy << ' '
+                     << this_gene->getRloopStructures()[i].probability << ' '
+                     << this_gene->getRloopStructures()[i].residual_twist << ' '
+                     << this_gene->getRloopStructures()[i].residual_linking_difference << ' '
+                     << this_gene->getRloopStructures()[i].residual_linking_difference / (temp->getN() * temp->getA()) << endl;
             }
         }
         if (dump){
@@ -636,10 +662,10 @@ void Simulation::simulation_B(float superhelicity, ofstream& outfile){
     //determine P(ground state)
     long double partition_function = 0;
     long double ground_state_factor = 0;
-    int index  = this_gene->getStructures().size();
+    int index  = this_gene->getRloopStructures().size();
     int count = 0;
-    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-         it < this_gene->getStructures().end(); ++it){
+    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+         it < this_gene->getRloopStructures().end(); ++it){
         partition_function += it->boltzmann_factor;
         count++;
     }
@@ -692,10 +718,10 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     //determine P(ground state)
     long double partition_function = 0;
     long double ground_state_factor = 0;
-    unsigned long index = this_gene->getStructures().size();
+    unsigned long index = this_gene->getRloopStructures().size();
     int count = 0;
-    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-         it < this_gene->getStructures().end(); ++it){
+    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+         it < this_gene->getRloopStructures().end(); ++it){
 
         partition_function += it->boltzmann_factor;
         count++;
@@ -704,8 +730,8 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     partition_function += ground_state_factor;
     //determine expected length at the given superhelicity value
     double expected_length = 0, n = 0;
-    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-         it < this_gene->getStructures().end(); ++it){
+    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+         it < this_gene->getRloopStructures().end(); ++it){
         if (top > 0 && it->position.get_length() > top){
             expected_length += (it->boltzmann_factor/partition_function)*it->position.get_length();
         }
@@ -716,8 +742,8 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     double var = 0;
     n = 0;
     //compute and report weighted variance
-    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-         it < this_gene->getStructures().end(); ++it){
+    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+         it < this_gene->getRloopStructures().end(); ++it){
         if (top > 0) {
             //do nothing
         }
@@ -900,16 +926,16 @@ void Simulation::sandbox() { //test/debug environment
     long double partition_function = 0;
     long double ground_state_factor = 0;
     long double sanity_check = 0;
-    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-         it < this_gene->getStructures().end(); ++it) {
+    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+         it < this_gene->getRloopStructures().end(); ++it) {
         partition_function += it->boltzmann_factor;
     }
     ground_state_factor = models[0]->ground_state_factor();
 
     partition_function += ground_state_factor;
     //sanity check code
-    for (vector<Structure>::iterator it = this_gene->getStructures().begin();
-         it < this_gene->getStructures().end(); ++it) {
+    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+         it < this_gene->getRloopStructures().end(); ++it) {
         sanity_check += it->boltzmann_factor/partition_function;
     }
     sanity_check += models[0]->ground_state_factor()/partition_function;
@@ -918,8 +944,9 @@ void Simulation::sandbox() { //test/debug environment
     values.assign(this_gene->getSequence().size()+1,0); //fill vector with 0s
     values[0] = ground_state_factor/partition_function;
     //iterate through structures and record each probability to the appropriate place in the values array
-    for (int i=1; i < this_gene->getStructures().size();i++){
-        values[this_gene->getStructures()[i].position.get_length()] += this_gene->getStructures()[i].boltzmann_factor/partition_function;
+    for (int i=1; i < this_gene->getRloopStructures().size();i++){
+        values[this_gene->getRloopStructures()[i].position.get_length()] +=
+                this_gene->getRloopStructures()[i].boltzmann_factor/partition_function;
     }
     for (int i=0; i < values.size(); i++){
         outfile << i << ' ' << values[i] << endl;
@@ -976,7 +1003,7 @@ void Simulation::sandbox() { //test/debug environment
             //sum the probabilities of all R-loop structures
             double partition_function = 0;
             for (vector<Structure>::iterator it = geneA.getStructures()[0]->begin();
-                 it != geneA.getStructures()[0]->end(); ++it) {
+                 it != geneA.getRloopStructures()[0]->end(); ++it) {
                 partition_function += it.base()->boltzmann_factor;
             }
             //compare to the partition function
