@@ -35,6 +35,7 @@ private:
     bool average_g;
     //member functions
     void compute_signal_bpprobs(Gene &gene, vector<double> *&signal);
+    void compute_signal_extbpprobs(Gene &gene, vector<double> *&signal);
     void compute_signal_average_G(Gene &gene, vector<double> *&signal);
     void compute_signal_mfe(Gene &gene, vector<double> *&signal);
     void call_peaks_threshold(Gene& gene, vector<double>& signal, vector<Loci>& peaks);

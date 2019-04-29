@@ -179,7 +179,7 @@ void Gene::compute_structures(Model &model){
     ground_state_energy = model.ground_state_energy();
 }
 
-void Gene::compute_external_structures(vector<Peak> &external_structures, Model &model){
+void Gene::compute_structures_external(vector<Peak> &external_structures, Model &model){
     //for each external structure
     for (int i=0; i < external_structures.size(); i++) {
         //reset windower position on the sequence
@@ -201,6 +201,7 @@ void Gene::compute_external_structures(vector<Peak> &external_structures, Model 
                 temp.position.strand = position.strand;
                 temp.position.start_pos = rloop_structures[j].position.start_pos;
                 temp.position.end_pos = rloop_structures[j].position.end_pos;
+                temp.external = true;
                 //pass the structure and window boundaries to the model
                 model.compute_external_structure(temp, rloop_structures[j], external_structures[i]);
                 //push the now computed structure onto these_structures

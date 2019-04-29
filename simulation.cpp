@@ -122,7 +122,26 @@ void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
              i < it->position.end_pos - gene.getPosition().start_pos; i++) {
             (*signal)[i] += it->probability;
         }
+    }
+    //if strand is -, reverse bp_probabilities
+    if (gene.getPosition().strand == "-") {
+        std::reverse(signal->begin(), signal->end());
+    }
+}
 
+void Simulation::compute_signal_extbpprobs(Gene &gene, vector<double> *&signal){
+    signal = new vector<double>(gene.get_length(), 0.0);
+    //compute the r-loop involvement probability for each base
+    //for each structure in the gene
+    for (std::vector<Structure>::iterator it = gene.getRloopStructures().begin();
+         it < gene.getRloopStructures().end(); ++it) {
+        if (it->external) {
+            //for each base in the structure
+            for (long int i = it->position.start_pos - gene.getPosition().start_pos;
+                 i < it->position.end_pos - gene.getPosition().start_pos; i++) {
+                (*signal)[i] += it->probability;
+            }
+        }
     }
     //if strand is -, reverse bp_probabilities
     if (gene.getPosition().strand == "-") {
@@ -468,6 +487,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     ofstream outfile3(outfilename+"_mfe.wig",ios::out);
     ofstream outfile4(outfilename+"_bpprob.bed",ios::out);
     ofstream outfile5(outfilename+"_mfe.bed",ios::out);
+    ofstream outfile6(outfilename+"_extbpprob.wig",ios::out);
 
     //write headers
     write_wigfile_header(outfile1,"signal1_"+outfilename);
@@ -475,6 +495,8 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     write_wigfile_header(outfile3,"signal3_"+outfilename);
     write_bedfile_header(outfile4,"signal1_peaks_"+outfilename);
     write_bedfile_header(outfile5,"signal3_peaks_"+outfilename);
+    write_wigfile_header(outfile6,"signal4_"+outfilename);
+
 
     bool eof = false;
     if (models.size() < 1){
@@ -513,7 +535,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         if (import_flag){ //need to eventually match imported structures with their associated genes / plasmids
             cout << "importing external structures from " << importfilename << "..." << endl;
             external_structures = import_external_structures(importfilename,*models[0]);
-            this_gene->compute_external_structures(external_structures,*models[0]);
+            this_gene->compute_structures_external(external_structures, *models[0]);
             cout << "complete!" << endl;
         }
 
@@ -539,14 +561,21 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         }
         std::sort(this_gene->getRloopStructures().begin(), this_gene->getRloopStructures().end());
         //compute signals and output .wig tracks
-        vector<double>* signal = NULL, *signal2 = NULL, *signal3 = NULL;
+        vector<double>* signal = NULL, *signal2 = NULL, *signal3 = NULL, *signal4 = NULL;
         vector<Loci> peaks;
         compute_signal_bpprobs(*this_gene,signal);
+        if (import_flag){
+            compute_signal_extbpprobs(*this_gene,signal4);
+        }
         if (average_g){
             compute_signal_average_G(*this_gene,signal2);
         }
         compute_signal_mfe(*this_gene,signal3);
+        //write signals
         write_wigfile(outfile1,this_gene,signal);
+        if (import_flag){
+            write_wigfile(outfile6, this_gene, signal4);
+        }
         if (average_g) {
             write_wigfile(outfile2, this_gene, signal2);
         }
@@ -564,13 +593,17 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         cout << "complete!" << endl;
         //output residuals if the option is selected
         if (residuals){
-            double ensemble_residual_twist = 0, ensemble_residual_linking_difference=0;
+            double ensemble_residual_twist = 0, ensemble_residual_linking_difference=0,
+                    ensemble_wrapping_absorption = 0, ensemble_strand_separation_absorption = 0;
+            Rloop_equilibrium_model* temp = (Rloop_equilibrium_model*)models[0];
             this_gene->compute_residuals(*models[0]);
             for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
                  it < this_gene->getRloopStructures().end(); ++it){
                 ensemble_residual_twist += it->residual_twist*it->probability;
                 ensemble_residual_linking_difference += it->residual_linking_difference*it->probability;
-            }
+                ensemble_wrapping_absorption += (temp->getAlpha()-it->residual_linking_difference + it->position.get_length()*temp->getA()) * it->probability;
+                ensemble_strand_separation_absorption -= (it->position.get_length()*temp->getA()) * it->probability;
+                }
             //consider the ground state as well
             double twist = 0,writhe=0;
             models[0]->ground_state_residuals(twist,writhe);
@@ -579,8 +612,9 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             cout << "ensemble_residual_twist: " << ensemble_residual_twist << endl;
             cout << "ensemble_residual_linking_difference: " << ensemble_residual_linking_difference << endl;
             //convert linking difference to superhelicity
-            Rloop_equilibrium_model* temp = (Rloop_equilibrium_model*)models[0];
             cout << "ensemble_residual_superhelicity: " << ensemble_residual_linking_difference/(temp->getN()*temp->getA()) << endl;
+            cout << "ensemble_wrapping_absorption: " <<  ensemble_wrapping_absorption << endl;
+            cout << "ensemble_strand_separation_absorption: " << ensemble_strand_separation_absorption << endl;
         }
         if (top > 0){
             //sort top N structures into a new vector
@@ -620,10 +654,13 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
     outfile2.close();
     outfile3.close();
     outfile4.close();
+    outfile5.close();
+    outfile6.close();
 }
 
 //computes P(R-Loop) for the provided supercoiling value
-void Simulation::simulation_B(float superhelicity, ofstream& outfile){
+void Simulation:: simulation_B(float superhelicity, ofstream& outfile){
+    vector<Peak> external_structures;
     if (!infile.is_open()){
         throw UnexpectedClosedFileException("Simulation::simulation_B");
     }
@@ -659,6 +696,12 @@ void Simulation::simulation_B(float superhelicity, ofstream& outfile){
     models[0]->set_superhelicity(superhelicity); //set the superhelicity in the model to the provided value
     this_gene->clear_structures(); //saves memory
     this_gene->compute_structures(*(models[0]));
+    if (import_flag){ //need to eventually match imported structures with their associated genes / plasmids
+        cout << "importing external structures from " << importfilename << "..." << endl;
+        external_structures = import_external_structures(importfilename,*models[0]);
+        this_gene->compute_structures_external(external_structures, *models[0]);
+        cout << "complete!" << endl;
+    }
     //determine P(ground state)
     long double partition_function = 0;
     long double ground_state_factor = 0;

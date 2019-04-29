@@ -51,6 +51,10 @@ int main(int argc, char* argv[]) {
             sim.complement_input();
             sim.reverse_input();
         }
+        else if (!strcmp(argv[i], "--import")){
+            sim.set_import_flag(true,argv[i+1]);
+            i++;
+        }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;
             exit(1);

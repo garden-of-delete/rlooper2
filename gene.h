@@ -67,7 +67,7 @@ public:
 
     void compute_structures_circular(Model& model);
 
-    void compute_external_structures(vector<Peak>& external_structures, Model& model);
+    void compute_structures_external(vector<Peak> &external_structures, Model &model);
 
     /**
      * computes residual twist and superhelicity for the ensemble
