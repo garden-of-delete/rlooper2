@@ -202,6 +202,7 @@ void Gene::compute_structures_external(vector<Peak> &external_structures, Model 
                 temp.position.start_pos = rloop_structures[j].position.start_pos;
                 temp.position.end_pos = rloop_structures[j].position.end_pos;
                 temp.external = true;
+                temp.external_length = external_structures[i].position.get_length();
                 //pass the structure and window boundaries to the model
                 model.compute_external_structure(temp, rloop_structures[j], external_structures[i]);
                 //push the now computed structure onto these_structures
@@ -307,21 +308,20 @@ void Gene::clear_sequence(){
     sequence.clear();
 }
 
-void Gene::dump_structures(string outfilename){
-    ofstream dumpfile(outfilename + gene_name + "_dump.txt",ios::out);
+void Gene::dump_structures(string outfilename) {
+    ofstream dumpfile(outfilename + gene_name + "_dump.txt", ios::out);
     std::stringstream ss;
     ss << "start_position stop_position energy probability\n";
     ss << "0 0 " << ground_state_energy << ' ' << 0 << endl; //add the ground state probabilit
+    cout << get_length() << endl;
     if (position.strand == "+") {
         for (int i = 0; i < rloop_structures.size(); i++) {
             ss << rloop_structures[i].position.start_pos << ' ' << rloop_structures[i].position.end_pos << ' ' <<
                rloop_structures[i].free_energy << ' ' << rloop_structures[i].probability << endl;
         }
-    }
-    else if (position.strand == "-") {
+    } else if (position.strand == "-") {
         for (int i = 0; i < rloop_structures.size(); i++) {
-            ss << sequence.size()-rloop_structures[i].position.end_pos << ' '
-               << sequence.size()-rloop_structures[i].position.start_pos << ' ' <<
+            ss << (this->getPosition().end_pos-rloop_structures[i].position.end_pos+this->getPosition().start_pos) << ' ' << (this->getPosition().end_pos-rloop_structures[i].position.start_pos+this->getPosition().start_pos) << ' ' <<
                rloop_structures[i].free_energy << ' ' << rloop_structures[i].probability << endl;
         }
     }
@@ -329,7 +329,6 @@ void Gene::dump_structures(string outfilename){
         cout << "Dump error. Strand unspecified.";
         exit(1); //replace with exception
     }
-    dumpfile << ss.rdbuf();
-    dumpfile.close();
+        dumpfile << ss.rdbuf();
+        dumpfile.close();
 }
-

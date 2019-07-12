@@ -538,6 +538,7 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
             this_gene->compute_structures_external(external_structures, *models[0]);
             cout << "complete!" << endl;
         }
+        cout << this_gene->getRloopStructures().size() << endl;
 
         //ensemble analysis, free energies and boltzmann factors have already been computed in compute_structures
         //compute partition function
@@ -593,16 +594,20 @@ void Simulation::simulation_A(){ //some of this code might be migrated into new 
         cout << "complete!" << endl;
         //output residuals if the option is selected
         if (residuals){
+            int gq_length = 0;
             double ensemble_residual_twist = 0, ensemble_residual_linking_difference=0,
                     ensemble_wrapping_absorption = 0, ensemble_strand_separation_absorption = 0;
             Rloop_equilibrium_model* temp = (Rloop_equilibrium_model*)models[0];
             this_gene->compute_residuals(*models[0]);
+            if (import_flag){
+                gq_length = external_structures[0].position.get_length(); //only works for one imported structure for now
+            }
             for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
                  it < this_gene->getRloopStructures().end(); ++it){
                 ensemble_residual_twist += it->residual_twist*it->probability;
                 ensemble_residual_linking_difference += it->residual_linking_difference*it->probability;
-                ensemble_wrapping_absorption += (temp->getAlpha()-it->residual_linking_difference + it->position.get_length()*temp->getA()) * it->probability;
-                ensemble_strand_separation_absorption -= (it->position.get_length()*temp->getA()) * it->probability;
+                ensemble_wrapping_absorption += (temp->getAlpha()-it->residual_linking_difference + (it->position.get_length()-gq_length)*temp->getA()) * it->probability;
+                ensemble_strand_separation_absorption -= ((it->position.get_length()-gq_length)*temp->getA()) * it->probability;
                 }
             //consider the ground state as well
             double twist = 0,writhe=0;
@@ -894,21 +899,20 @@ void Simulation::simulation_D(){
                     current_partition_function += structures_1[j].boltzmann_factor;
                 }
                 current_partition_function += models[0]->ground_state_factor();
-                double urn  = ((double)rand()/(double)RAND_MAX); //uniform random number on [0,1]
+                double urn  = ((double)rand()/(double)RAND_MAX); // random number chosen uniformly on [0,1]
                 double test = (1-models[0]->ground_state_factor()/current_partition_function); //p(all r-loop states)
                 //cout << "comparison: " << urn << " vs. " << test << endl; // DEBUG print the probabilities being compared here
 
-                if (urn < test){
-                    cout << "initiation at bp: " << current_pos+1 << endl;
+                if (urn < test) {
+                    cout << "initiation at bp: " << current_pos + 1 << endl;
                     in_rloop = true;
 
                     //debug vvv
-                    current_pos = w-1;
+                    current_pos = w - 1;
                     in_rloop = false;
                     structures_1.clear();
-                    current_pos = this_gene->getSequence().size()-1; // skip to the end
+                    current_pos = this_gene->getSequence().size() - 1; // skip to the end
                     continue;
-                    
                 }
 
                 //if are in r-loop

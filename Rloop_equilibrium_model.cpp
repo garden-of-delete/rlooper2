@@ -225,11 +225,12 @@ void Rloop_equilibrium_model::compute_external_structure(Structure& structure, S
     }
     structure.free_energy += rloop.bp_energy;
     structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
+
 }
 
 void Rloop_equilibrium_model::compute_residuals(Structure &structure){
-    structure.residual_linking_difference = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length())) * (alpha+structure.position.get_length()*A);
-    structure.residual_twist = ((2*pi*k) / (4*pow(pi,2)*C+k*structure.position.get_length())) * (alpha+structure.position.get_length()*A);
+    structure.residual_linking_difference = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
+    structure.residual_twist = ((2*pi*k) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
 }
 
 void Rloop_equilibrium_model::ground_state_residuals(double &twist, double &writhe){
