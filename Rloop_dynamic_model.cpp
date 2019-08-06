@@ -1,10 +1,15 @@
 //
+// Created by Robert Stolz on 7/21/19.
+//
+
+#include "Rloop_dynamic_model.h"
+
+//
 // Created by Robert Stolz on 6/27/17.
 //
 
-#include "Rloop_equilibrium_model.h"
 //constructors
-Rloop_equilibrium_model::Rloop_equilibrium_model() {
+Rloop_dynamic_model::Rloop_dynamic_model() {
 
     N = 1500; //1500bp is the experimentally determined length of the (-) sc domain after the transcription machinery
     A = 1/10.4; // turns/bp
@@ -38,80 +43,84 @@ Rloop_equilibrium_model::Rloop_equilibrium_model() {
     override_energy = 0.0;
 }
 
-int Rloop_equilibrium_model::getN() const {
+int Rloop_dynamic_model::getN() const {
     return N;
 }
 
-double Rloop_equilibrium_model::getA() const {
+double Rloop_dynamic_model::getA() const {
     return A;
 }
 
-double Rloop_equilibrium_model::getC() const {
+double Rloop_dynamic_model::getC() const {
     return C;
 }
 
-double Rloop_equilibrium_model::getK() const {
+double Rloop_dynamic_model::getK() const {
     return k;
 }
 
-double Rloop_equilibrium_model::geta() const {
+double Rloop_dynamic_model::geta() const {
     return a;
 }
 
-double Rloop_equilibrium_model::getSigma() const {
+double Rloop_dynamic_model::getSigma() const {
     return sigma;
 }
 
-double Rloop_equilibrium_model::getAlpha() const {
+double Rloop_dynamic_model::getAlpha() const {
     return alpha;
 }
 
-void Rloop_equilibrium_model::setN(int N) {
-    Rloop_equilibrium_model::N = N;
+int Rloop_dynamic_model::getCurrentPos() const {
+    return current_pos;
+}
+
+void Rloop_dynamic_model::setN(int N) {
+    Rloop_dynamic_model::N = N;
     setAlpha(N*sigma*A);
     k = (2200 * 0.0019858775 * T) / N;
 }
 
-void Rloop_equilibrium_model::setA(double A) {
-    Rloop_equilibrium_model::A = A;
+void Rloop_dynamic_model::setA(double A) {
+    Rloop_dynamic_model::A = A;
     setAlpha(N*sigma*A);
 }
 
-void Rloop_equilibrium_model::setC(double C) {
-    Rloop_equilibrium_model::C = C;
+void Rloop_dynamic_model::setC(double C) {
+    Rloop_dynamic_model::C = C;
 }
 
-void Rloop_equilibrium_model::setK(double k) {
-    Rloop_equilibrium_model::k = k;
+void Rloop_dynamic_model::setK(double k) {
+    Rloop_dynamic_model::k = k;
 }
 
-void Rloop_equilibrium_model::seta(double a) {
-    Rloop_equilibrium_model::a = a;
+void Rloop_dynamic_model::seta(double a) {
+    Rloop_dynamic_model::a = a;
 }
 
-void Rloop_equilibrium_model::set_superhelicity(double sigma) {
-    Rloop_equilibrium_model::sigma = sigma;
+void Rloop_dynamic_model::set_superhelicity(double sigma) {
+    Rloop_dynamic_model::sigma = sigma;
     setAlpha(N*sigma*A);
 }
 
-void Rloop_equilibrium_model::set_unconstrained(bool value){
+void Rloop_dynamic_model::set_unconstrained(bool value){
     unconstrained = value;
 }
 
-void Rloop_equilibrium_model::setAlpha(double alpha) {
-    Rloop_equilibrium_model::alpha = alpha;
+void Rloop_dynamic_model::setAlpha(double alpha) {
+    Rloop_dynamic_model::alpha = alpha;
 }
 
-double Rloop_equilibrium_model::getT() const {
+double Rloop_dynamic_model::getT() const {
     return T;
 }
 
-void Rloop_equilibrium_model::setT(double T) {
-    Rloop_equilibrium_model::T = T;
+void Rloop_dynamic_model::setT(double T) {
+    Rloop_dynamic_model::T = T;
     k = (2200 * 0.0019858775 * T) / N;
 }
 
-int Rloop_equilibrium_model::find_distance(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
+int Rloop_dynamic_model::find_distance(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
     std::vector<char>::iterator b_0;
     int n=1;
     for (b_0=start; b_0 != stop;n++) {
@@ -125,7 +134,7 @@ int Rloop_equilibrium_model::find_distance(vector<char>& sequence, const std::ve
     return n;
 }
 
-double Rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second){
+double Rloop_dynamic_model::step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second){
     char b_0 = *first;
     char b_1 = *second;
     double I_0;
@@ -137,7 +146,7 @@ double Rloop_equilibrium_model::step_forward_bps(const vector<char>::iterator& f
 
 void set_bp_energy_override();
 
-double Rloop_equilibrium_model::compute_bps_interval(const char &first, const char &second){
+double Rloop_dynamic_model::compute_bps_interval(const char &first, const char &second){
     if (homopolymer_override == true){
         return override_energy;
     }
@@ -183,12 +192,33 @@ double Rloop_equilibrium_model::compute_bps_interval(const char &first, const ch
     }
 }
 
-void Rloop_equilibrium_model::set_bp_energy_override(double energy){
+void Rloop_dynamic_model::set_bp_energy_override(double energy){
     homopolymer_override = true;
     override_energy = energy;
 }
 
-void Rloop_equilibrium_model::compute_structure(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
+void Rloop_dynamic_model::reset_model() {
+    current_pos = 0;
+    current_bp_energy = 0;
+    current_junction_energy = 0;
+    current_superhelical_energy = 0;
+    total_energy = 0;
+    proposed_bp_energy = 0;
+    proposed_junction_energy = 0;
+    proposed_superhelical_energy = 0;
+    n_rloops = 0;
+    current_pos = 0;
+}
+
+void Rloop_dynamic_model::step_forward_initiation(int n) {
+
+}
+
+void Rloop_dynamic_model::step_forward_elongation(int n) {
+
+}
+
+void Rloop_dynamic_model::compute_structure(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
     std::vector<char>::iterator b_0,b_1;
     //get boundaries of the sequence for this structure
     long int m = find_distance(sequence,start,stop,structure); //need to make boundary aware, draw this value from windower
@@ -214,7 +244,7 @@ void Rloop_equilibrium_model::compute_structure(vector<char>& sequence, const st
     structure.boltzmann_factor = compute_boltzmann_factor(structure.free_energy,T);
 }
 
-void Rloop_equilibrium_model::compute_external_structure(Structure& structure, Structure& rloop, Peak& external){
+void Rloop_dynamic_model::compute_external_structure(Structure& structure, Structure& rloop, Peak& external){
     std::vector<char>::iterator b_0,b_1;
     //get boundaries of the sequence for this structure
     long int m = rloop.position.get_length();
@@ -227,20 +257,20 @@ void Rloop_equilibrium_model::compute_external_structure(Structure& structure, S
 
 }
 
-void Rloop_equilibrium_model::compute_residuals(Structure &structure){
+void Rloop_dynamic_model::compute_residuals(Structure &structure){
     structure.residual_linking_difference = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
     structure.residual_twist = ((2*pi*k) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
 }
 
-void Rloop_equilibrium_model::ground_state_residuals(double &twist, double &writhe){
+void Rloop_dynamic_model::ground_state_residuals(double &twist, double &writhe){
     writhe = alpha;
     twist = k/(2*pi)*C*alpha;
 }
 
-long double Rloop_equilibrium_model::ground_state_factor(){
+long double Rloop_dynamic_model::ground_state_factor(){
     return compute_boltzmann_factor(((k*pow(alpha, 2)) / 2) - a,T);
 }
 
-long double Rloop_equilibrium_model::ground_state_energy(){
+long double Rloop_dynamic_model::ground_state_energy(){
     return ((k*pow(alpha, 2)) / 2) - a;
 }

@@ -7,7 +7,7 @@ using namespace std;
 int main(int argc, char* argv[]) {
 
     Simulation sim;
-    Rloop_equilibrium_model model;
+    Rloop_dynamic_model model;
     bool sandbox = false;
     //process command line arguments
     sim.set_infile(argv[1]);

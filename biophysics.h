@@ -13,9 +13,7 @@
 #define pi 3.14159265359
 
 //globally relevant biophysics related functions.
-long double compute_boltzmann_factor(double E, double T){
-    return exp(-1*E/(R*T));
-}
+inline long double compute_boltzmann_factor(double E, double T) {return exp(-1*E/(R*T));}
 
 
 #endif //RLOOPER2_BIOPHYSICS_H

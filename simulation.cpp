@@ -806,9 +806,9 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
     outfile << superhelicity << ' ' << expected_length << ' ' << var << endl;
 }
 
-void Simulation::simulation_D(){
+void Simulation::simulation_D() {
     //process input sequence vvv
-    if (!infile.is_open()){
+    if (!infile.is_open()) {
         throw UnexpectedClosedFileException("Simulation::simulation_D");
     }/*
     ofstream outfile1(outfilename+"_bpprob.wig",ios::out);
@@ -825,11 +825,9 @@ void Simulation::simulation_D(){
     write_bedfile_header(outfile5,"signal3_peaks_"+outfilename);
     */
     bool eof = false;
-    if (models.size() < 1){
-        //throw exception
-    }
+    Rloop_dynamic_model dynamic_model;
     //do while !eof
-    while(eof == false) {
+    while (eof == false) {
         //allocate new gene
         Gene *this_gene = new Gene();
         this_gene->windower.set_min_window_size(minlength);
@@ -842,8 +840,9 @@ void Simulation::simulation_D(){
         } else if (this_gene->getPosition().strand == "-") {
             this_gene->invert_sequence();
         }
-        if (auto_domain_size){
-            static_cast<Rloop_equilibrium_model*>(models[0])->setN(this_gene->get_length()); //need to compute this from the actual sequence.
+        if (auto_domain_size) {
+            static_cast<Rloop_equilibrium_model *>(models[0])->setN(
+                    this_gene->get_length()); //need to compute this from the actual sequence.
         }
         if (complement_flag) {
             this_gene->complement_sequence();
@@ -856,7 +855,7 @@ void Simulation::simulation_D(){
         } else {
             //this_gene->compute_structures(*models[0]);
         }
-        if(seed == 0) {
+        if (seed == 0) {
             seed = time(NULL);
         }
         cout << "Seed: " << seed << endl;
@@ -866,140 +865,82 @@ void Simulation::simulation_D(){
         int s1 = 1; //placeholder
         int s2 = 10; // placeholder
         double transcriptional_superhelicity = -0.01; //placeholder
-        double ambient_linking_difference = static_cast<Rloop_equilibrium_model*>(models[0])->getAlpha();
+        double ambient_linking_difference = static_cast<Rloop_equilibrium_model *>(models[0])->getAlpha();
 
         //run simulation n_times
-        for (int i=0; i < n_simulations; i++) {
-            cout << "Simulation " << i+1 << ' ';
-            //initialize simulation variables
-            int current_pos = w-1;
-            double current_partition_function = 0.0;
-            bool in_rloop = false;
-            vector<char> current_window_sequence;
-            vector<Structure> structures_1, structures_2;
-
+        for (int i = 0; i < n_simulations; i++) {
+            cout << "Simulation " << i + 1 << ' ';
             //set initial position and window
-            while (current_pos < this_gene->getSequence().size()-1) { //until end of sequence
-                current_partition_function = 0.0;
-                current_window_sequence.clear();
-                //if not last window ???
+            while (dynamic_model.getCurrentPos() < this_gene->getSequence().size() - 1) { //until end of sequence
+                dynamic_model.reset_model();
+                if (!dynamic_model.in_rloop) { //if in the initiation regime
+                    dynamic_model.step_forward_initiation(s1);
+                } else { //if in the elongation regime
 
-                //if not in r-loop
-                //compute P(all R-loop structures)/(P(all R-loop strucutures)+P(no rloop))
-                //sequence copy step (placeholder)
-                for (int j=current_pos-w+1; j <= current_pos; j++){
-                    current_window_sequence.push_back(this_gene->getSequence()[j]);
-                }
-                //set superhelical parameters
-                double current_linking_difference = ambient_linking_difference +
-                                                    ((current_pos-1)*transcriptional_superhelicity*static_cast<Rloop_equilibrium_model*>(models[0])->getA());
-                static_cast<Rloop_equilibrium_model*>(models[0])->setAlpha(current_linking_difference);
-                structures_1 = this_gene->compute_structures_dynamic(*models[0],current_window_sequence);
-                for (int j=0; j < structures_1.size(); j++){
-                    current_partition_function += structures_1[j].boltzmann_factor;
-                }
-                current_partition_function += models[0]->ground_state_factor();
-                double urn  = ((double)rand()/(double)RAND_MAX); // random number chosen uniformly on [0,1]
-                double test = (1-models[0]->ground_state_factor()/current_partition_function); //p(all r-loop states)
-                //cout << "comparison: " << urn << " vs. " << test << endl; // DEBUG print the probabilities being compared here
-
-                if (urn < test) {
-                    cout << "initiation at bp: " << current_pos + 1 << endl;
-                    in_rloop = true;
-
-                    //debug vvv
-                    current_pos = w - 1;
-                    in_rloop = false;
-                    structures_1.clear();
-                    current_pos = this_gene->getSequence().size() - 1; // skip to the end
-                    continue;
                 }
 
-                //if are in r-loop
-
-                //compute P(current r-loop with extension of size s2)/(P(current r-loop with extension of size s2)+P(no extension))
-                //if r-loop has terminated
-                //backtracking logic
-                //create a Structure and push onto vector of R-loops
-                //save R-loop structures to a file, and clear the vector
-                //if not in r-loop
-                if (!in_rloop){
-                    //advance window by step of size s1
-                    current_pos += s1;
-                }
-                else{
-                    //advance window by step of size s2
-                    current_pos += s2;
-                }
-                if (current_pos >= this_gene->getSequence().size()-1){
-                    cout << "initiation at bp: none" << endl;
-                }
             }
         }
     }
 }
 
-void Simulation::sandbox() { //test/debug environment
-    //sum sequence favorability
+    void Simulation::sandbox() { //test/debug environment
+        //sum sequence favorability
 
+        //R-loop length histogram
+        ofstream outfile(outfilename, ios::out);
+        Gene *this_gene;
+        this_gene = new Gene();
+        this_gene->read_gene(infile);
+        this_gene->windower.set_min_window_size(minlength);
+        if (this_gene->getPosition().strand == "+") {
+            this_gene->complement_sequence();
+        } else if (this_gene->getPosition().strand == "-") {
+            this_gene->invert_sequence();
+        }
+        if (complement_flag) {
+            this_gene->complement_sequence();
+        }
+        if (reverse_flag) {
+            this_gene->invert_sequence();
+        }
+        genes.push_back(this_gene);
+        if (circular_flag) {
+            this_gene->compute_structures_circular(*models[0]);
+        } else {
+            this_gene->compute_structures(*models[0]);
+        }
+        //determine P(ground state)
+        long double partition_function = 0;
+        long double ground_state_factor = 0;
+        long double sanity_check = 0;
+        for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+             it < this_gene->getRloopStructures().end(); ++it) {
+            partition_function += it->boltzmann_factor;
+        }
+        ground_state_factor = models[0]->ground_state_factor();
 
-
-    //R-loop length histogram
-    ofstream outfile(outfilename,ios::out);
-    Gene *this_gene;
-    this_gene = new Gene();
-    this_gene->read_gene(infile);
-    this_gene->windower.set_min_window_size(minlength);
-    if (this_gene->getPosition().strand == "+") {
-        this_gene->complement_sequence();
+        partition_function += ground_state_factor;
+        //sanity check code
+        for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
+             it < this_gene->getRloopStructures().end(); ++it) {
+            sanity_check += it->boltzmann_factor / partition_function;
+        }
+        sanity_check += models[0]->ground_state_factor() / partition_function;
+        cout << "Sanity check: " << sanity_check << endl;
+        vector<long double> values;
+        values.assign(this_gene->getSequence().size() + 1, 0); //fill vector with 0s
+        values[0] = ground_state_factor / partition_function;
+        //iterate through structures and record each probability to the appropriate place in the values array
+        for (int i = 1; i < this_gene->getRloopStructures().size(); i++) {
+            values[this_gene->getRloopStructures()[i].position.get_length()] +=
+                    this_gene->getRloopStructures()[i].boltzmann_factor / partition_function;
+        }
+        for (int i = 0; i < values.size(); i++) {
+            outfile << i << ' ' << values[i] << endl;
+        }
+        outfile.close();
     }
-    else if(this_gene->getPosition().strand == "-") {
-        this_gene->invert_sequence();
-    }
-    if (complement_flag) {
-        this_gene->complement_sequence();
-    }
-    if (reverse_flag) {
-        this_gene->invert_sequence();
-    }
-    genes.push_back(this_gene);
-    if (circular_flag) {
-        this_gene->compute_structures_circular(*models[0]);
-    }
-    else{
-        this_gene->compute_structures(*models[0]);
-    }
-    //determine P(ground state)
-    long double partition_function = 0;
-    long double ground_state_factor = 0;
-    long double sanity_check = 0;
-    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
-         it < this_gene->getRloopStructures().end(); ++it) {
-        partition_function += it->boltzmann_factor;
-    }
-    ground_state_factor = models[0]->ground_state_factor();
-
-    partition_function += ground_state_factor;
-    //sanity check code
-    for (vector<Structure>::iterator it = this_gene->getRloopStructures().begin();
-         it < this_gene->getRloopStructures().end(); ++it) {
-        sanity_check += it->boltzmann_factor/partition_function;
-    }
-    sanity_check += models[0]->ground_state_factor()/partition_function;
-    cout << "Sanity check: " << sanity_check << endl;
-    vector<long double> values;
-    values.assign(this_gene->getSequence().size()+1,0); //fill vector with 0s
-    values[0] = ground_state_factor/partition_function;
-    //iterate through structures and record each probability to the appropriate place in the values array
-    for (int i=1; i < this_gene->getRloopStructures().size();i++){
-        values[this_gene->getRloopStructures()[i].position.get_length()] +=
-                this_gene->getRloopStructures()[i].boltzmann_factor/partition_function;
-    }
-    for (int i=0; i < values.size(); i++){
-        outfile << i << ' ' << values[i] << endl;
-    }
-    outfile.close();
-}
 
 /*
  * Test clustering code

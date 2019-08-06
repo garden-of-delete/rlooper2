@@ -1,13 +1,15 @@
 //
-// Created by Robert Stolz on 6/27/17.
+// Created by Robert Stolz on 7/21/19.
 //
-#ifndef RLOOPER2_RLOOP_EQUILIBRIUM_MODEL_H
-#define RLOOPER2_RLOOP_EQUILIBRIUM_MODEL_H
 
-#include <vector>
+#ifndef RLOOPER2_RLOOP_DYNAMIC_MODEL_H
+#define RLOOPER2_RLOOP_DYNAMIC_MODEL_H
+
 #include "model.h"
+#include <vector>
 
-class Rloop_equilibrium_model: public Model{
+
+class Rloop_dynamic_model : public Model{
 protected:
     //model parameters
     //equilibrium energetics parameters
@@ -41,11 +43,26 @@ protected:
     bool unconstrained;
     double override_energy;
 
+    //dynamic model specific parameters
+    char* raw_sequence;
+    double current_bp_energy;
+    double current_junction_energy;
+    double current_superhelical_energy;
+    double total_energy;
+    double proposed_bp_energy;
+    double proposed_junction_energy;
+    double proposed_superhelical_energy;
+    int n_rloops;
+    int current_pos;
+
 public:
     //constructors
-    Rloop_equilibrium_model();
+    Rloop_dynamic_model();
     //need a special constructor that lets your specify some or all of these parameters
 
+    bool in_rloop;
+
+    //getters and setters
     int getN() const;
     double getA() const;
     double getC() const;
@@ -54,6 +71,7 @@ public:
     double geta() const;
     double getSigma() const;
     double getAlpha() const;
+    int getCurrentPos() const;
     void setN(int N);
     void setA(double A);
     void setC(double C);
@@ -66,6 +84,10 @@ public:
     void set_bp_energy_override(double energy);
 
     //member functions
+    void reset_model();
+    void step_forward_initiation(int n);
+    void step_forward_elongation(int n);
+
     int find_distance(vector<char>& sequence,const vector<char>::iterator& first, const vector<char>::iterator& second, Structure& structure);
     double step_forward_bps(const vector<char>::iterator& first, const vector<char>::iterator& second);
     double compute_bps_interval(const char &first, const char &second);
@@ -76,4 +98,6 @@ public:
     long double ground_state_factor();
     long double ground_state_energy();
 };
-#endif //RLOOPER2_MODEL_H
+
+
+#endif //RLOOPER2_RLOOP_DYNAMIC_MODEL_H

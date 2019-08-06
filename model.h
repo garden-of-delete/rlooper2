@@ -7,6 +7,7 @@
 
 #include "structure.h"
 #include "windower.h"
+#include "biophysics.h"
 
 class Model{ //abstract class
 protected:

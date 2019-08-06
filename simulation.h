@@ -4,6 +4,7 @@
 
 #ifndef RLOOPER2_SIMULATION_H
 #include "Rloop_equilibrium_model.h"
+#include "Rloop_dynamic_model.h"
 #include <algorithm>
 #include <array>
 #include <random>
@@ -13,7 +14,8 @@
 #include <cstdlib>
 #include <cmath>
 #include "float.h"
-
+#include <unordered_map>
+#include "gene.h"
 class Simulation{
 private:
     std::vector<Model*> models;
