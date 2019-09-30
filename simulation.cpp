@@ -808,6 +808,8 @@ void Simulation::simulation_C(float superhelicity, ofstream& outfile){
 
 void Simulation::simulation_D() {
     //process input sequence vvv
+    ofstream outfile(outfilename+".txt", ios::out);
+    ofstream outfile2(outfilename+".bed",ios::out);
     if (!infile.is_open()) {
         throw UnexpectedClosedFileException("Simulation::simulation_D");
     }/*
@@ -825,7 +827,7 @@ void Simulation::simulation_D() {
     write_bedfile_header(outfile5,"signal3_peaks_"+outfilename);
     */
     bool eof = false;
-    Rloop_dynamic_model dynamic_model;
+    Rloop_dynamic_model* dynamic_model = static_cast<Rloop_dynamic_model *>(models[0]);
     //do while !eof
     while (eof == false) {
         //allocate new gene
@@ -841,7 +843,7 @@ void Simulation::simulation_D() {
             this_gene->invert_sequence();
         }
         if (auto_domain_size) {
-            static_cast<Rloop_equilibrium_model *>(models[0])->setN(
+            dynamic_model->setN(
                     this_gene->get_length()); //need to compute this from the actual sequence.
         }
         if (complement_flag) {
@@ -858,30 +860,49 @@ void Simulation::simulation_D() {
         if (seed == 0) {
             seed = time(NULL);
         }
+        srand(seed);
         cout << "Seed: " << seed << endl;
-
         int n_simulations = 1000; // placeholder
-        int w = 15; //placeholder
-        int s1 = 1; //placeholder
-        int s2 = 10; // placeholder
-        double transcriptional_superhelicity = -0.01; //placeholder
-        double ambient_linking_difference = static_cast<Rloop_equilibrium_model *>(models[0])->getAlpha();
+        dynamic_model->sequence = this_gene->getSequence();
+        dynamic_model->setWindow_size(15);
+        dynamic_model->setInitiation_step_size(1);
+        dynamic_model->setElongation_step_size(5);
+        dynamic_model->setTranscriptional_superhelicity(-0.01); //placeholder
+        dynamic_model->ambient_linking_difference = static_cast<Rloop_dynamic_model *>(models[0])->getAlpha();
 
         //run simulation n_times
         for (int i = 0; i < n_simulations; i++) {
-            cout << "Simulation " << i + 1 << ' ';
+            cout << "Simulation " << i + 1 << ' ' << endl;
+            outfile << "Simulation " << i + 1 << ' ' << endl;
             //set initial position and window
-            while (dynamic_model.getCurrentPos() < this_gene->getSequence().size() - 1) { //until end of sequence
-                dynamic_model.reset_model();
-                if (!dynamic_model.in_rloop) { //if in the initiation regime
-                    dynamic_model.step_forward_initiation(s1);
-                } else { //if in the elongation regime
-
+            dynamic_model->reset_model();
+            //calculate the rloop independent superhelical conditions at the current polymerase position in the current rloop state.
+            while (dynamic_model->getCurrentPos() < this_gene->getSequence().size()) { //until end of sequence
+                //cout << "Current Position: " << dynamic_model->getCurrentPos() << endl;
+                dynamic_model->setAlphaTotal(dynamic_model->ambient_linking_difference +
+                                                    (dynamic_model->getCurrentPos()*dynamic_model->getTranscriptional_superhelicity()*dynamic_model->getA()));
+                if (dynamic_model->getN_rloop_bases() > 0) { //to avoid /0 errors
+                    dynamic_model->setAlpha(dynamic_model->compute_residual_lk_dynamic()); //returns residual linking difference
                 }
-
+                else{
+                    dynamic_model->setAlpha(dynamic_model->getAlphaTotal());
+                }
+                dynamic_model->print_topological_state();
+                if (!dynamic_model->in_rloop) { //if in the initiation regime
+                    dynamic_model->step_forward_initiation();
+                    //dynamic_model->print_topological_state();
+                } else { //if in the elongation regime
+                    if (!dynamic_model->step_forward_elongation()){
+                        //break; //only allows one R-loop per simulation
+                        continue; //allows any number of R-loops per simulation
+                    }
+                }
             }
+            outfile << dynamic_model->write_buffer.rdbuf();
         }
+        write_bedfile(outfile2,this_gene,dynamic_model->rloop_structures);
     }
+    outfile.close();
 }
 
     void Simulation::sandbox() { //test/debug environment
@@ -940,7 +961,7 @@ void Simulation::simulation_D() {
             outfile << i << ' ' << values[i] << endl;
         }
         outfile.close();
-    }
+}
 
 /*
  * Test clustering code

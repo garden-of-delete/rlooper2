@@ -71,6 +71,10 @@ double Rloop_dynamic_model::getAlpha() const {
     return alpha;
 }
 
+double Rloop_dynamic_model::getAlphaTotal() const {
+    return alpha_total;
+}
+
 int Rloop_dynamic_model::getCurrentPos() const {
     return current_pos;
 }
@@ -109,6 +113,10 @@ void Rloop_dynamic_model::set_unconstrained(bool value){
 
 void Rloop_dynamic_model::setAlpha(double alpha) {
     Rloop_dynamic_model::alpha = alpha;
+}
+
+void Rloop_dynamic_model::setAlphaTotal(double alpha) {
+    Rloop_dynamic_model::alpha_total = alpha;
 }
 
 double Rloop_dynamic_model::getT() const {
@@ -202,20 +210,114 @@ void Rloop_dynamic_model::reset_model() {
     current_bp_energy = 0;
     current_junction_energy = 0;
     current_superhelical_energy = 0;
-    total_energy = 0;
     proposed_bp_energy = 0;
     proposed_junction_energy = 0;
     proposed_superhelical_energy = 0;
+    partition_function = 0;
     n_rloops = 0;
-    current_pos = 0;
+    n_rloop_bases = 0;
+    current_pos = window_size-1;
 }
 
-void Rloop_dynamic_model::step_forward_initiation(int n) {
-
+void Rloop_dynamic_model::step_forward_initiation() {
+    //evaluate current window
+    proposed_superhelical_energy = 0;
+    proposed_junction_energy = 0;
+    partition_function = 0;
+    for (int i=current_pos-window_size+1; i < current_pos; i++){
+        int m=0;
+        proposed_bp_energy = 0;
+        for (int j=i+1; j <= current_pos; j++) { //sum up the boltzmann factors for the proposed energy of every rloop in the initiation window
+            proposed_bp_energy += compute_bps_interval(sequence[j-1], sequence[j]);
+            m = j-i+1+n_rloop_bases;
+            proposed_superhelical_energy =
+                    (2 * pow(M_PI, 2) * C * k * pow((alpha_total + m * A), 2)) / (4 * pow(M_PI, 2) * C + k * m);
+            proposed_junction_energy = current_junction_energy + .5 * a;
+            partition_function += compute_boltzmann_factor(proposed_bp_energy + proposed_superhelical_energy + proposed_junction_energy,T);
+        }
+    }
+    partition_function += ground_state_factor();
+    double urn  = ((double)rand()/(double)RAND_MAX); // random number chosen uniformly on [0,1]
+    long double test = (1-ground_state_factor()/partition_function); //p(all r-loop states)
+    if (urn < test){ //urn < P(all r-loop states within the initiation window
+        in_rloop = true;
+        n_rloops++;
+        n_rloop_bases += window_size;
+        //compute current energy values
+        for (int i=current_pos-window_size+2; i < current_pos; i++){
+            current_bp_energy += compute_bps_interval(sequence[i], sequence[i+1]);
+        }
+        current_junction_energy = .5 * a;
+        int m = window_size;
+        current_superhelical_energy =
+                (2 * pow(M_PI, 2) * C * k * pow((alpha + m * A), 2)) / (4 * pow(M_PI, 2) * C + k * m);
+        cout << "init " << current_pos + 2 - window_size<< endl;
+        write_buffer << "init " << current_pos + 2 - window_size<< endl;
+        current_loci.start_pos = current_pos + 2 - window_size;
+        //print_topological_state();
+    }
+    else {
+        current_pos += initiation_step_size; //advance the current position
+    }
 }
 
-void Rloop_dynamic_model::step_forward_elongation(int n) {
+bool Rloop_dynamic_model::step_forward_elongation() {
+    proposed_bp_energy = current_bp_energy;
+    current_pos += elongation_step_size;
+    if (current_pos >= sequence.size()-1){ //if at the end of the sequence
+        return false;}
+    for (int i=current_pos-elongation_step_size; i < current_pos; i++){
+        proposed_bp_energy += compute_bps_interval(sequence[i],sequence[i+1]);
+    }
+    int m = n_rloop_bases + elongation_step_size;
+    proposed_superhelical_energy =
+            (2 * pow(M_PI, 2) * C * k * pow((alpha_total+ m * A), 2)) / (4 * pow(M_PI, 2) * C + k * m); // QUESTION: is this the correct term to be using here?
+    current_superhelical_energy =
+            (2 * pow(M_PI, 2) * C * k * pow((alpha_total + n_rloop_bases * A), 2)) / (4 * pow(M_PI, 2) * C + k * n_rloop_bases);
+    proposed_junction_energy = current_junction_energy+0.5*a; //propose to add a new junction
+    //proposed_junction_energy = current_junction_energy;
+    long double proposed_total_energy_bf = compute_boltzmann_factor(proposed_bp_energy+proposed_superhelical_energy+current_junction_energy,T);
+    partition_function += proposed_total_energy_bf;
+    partition_function += compute_boltzmann_factor(current_bp_energy+current_superhelical_energy+proposed_junction_energy*a,T); //bf for the no extend state
+    double urn  = ((double)rand()/(double)RAND_MAX); // random number chosen uniformly on [0,1]
+    long double test = (proposed_total_energy_bf/partition_function); //p(all r-loop states)
+    if (urn < test){ //if urn < P(elongation)
+        n_rloop_bases += elongation_step_size;
+        current_superhelical_energy = proposed_superhelical_energy;
+        current_bp_energy = proposed_bp_energy;
+    }
+    else{ //termination
+        in_rloop = false;
+        current_junction_energy += .5*a;
+        current_loci.end_pos = current_pos+1;
+        rloop_structures.push_back(current_loci);
+        cout << "term " << current_pos + 1 << ' ' << current_loci.get_length() << endl;
+        write_buffer << "term " << current_pos + 1 << ' ' << current_loci.get_length() << endl;
+        current_pos = current_pos + window_size; //move the current position forward to set up the initiation window
+        //print_topological_state();
+        return false;
+    }
+    return true;
+}
 
+void Rloop_dynamic_model::print_topological_state(){
+    /*
+    double ambient_linking_difference = N*A*sigma;
+    double total_generated_linking_difference = ambient_linking_difference +
+                                        (getCurrentPos()*transcriptional_superhelicity*getA());
+    double residual_linking_difference = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*n_rloop_bases)) * (total_generated_linking_difference+n_rloop_bases*A);
+    cout << "current_pos: " << current_pos+1 << endl; //convert index to bp position
+    cout << "Basal linking difference: " << ambient_linking_difference << endl;
+    cout << "Total generated linking difference: " << total_generated_linking_difference << endl;
+    cout << "Residual superhelicity from " << n_rloops << " R-loops: " << residual_linking_difference << endl;*/
+
+    /*
+    cout << "current_pos: " << current_pos+1 << endl; //convert index to bp position
+    cout << "Basal linking difference: " << ambient_linking_difference << endl;
+    cout << "Total generated linking difference: " << alpha_total << endl;
+    cout << "Current avaliable linking difference after "<< n_rloops << " R-loops: " << alpha << endl;
+     */
+    write_buffer << current_pos+1<<' '<<ambient_linking_difference<<' '<<alpha_total<<' '<<n_rloops<<' '<<alpha<< endl; //convert index to bp position
 }
 
 void Rloop_dynamic_model::compute_structure(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){
@@ -257,9 +359,16 @@ void Rloop_dynamic_model::compute_external_structure(Structure& structure, Struc
 
 }
 
-void Rloop_dynamic_model::compute_residuals(Structure &structure){
+void Rloop_dynamic_model::compute_residuals(Structure& structure){
     structure.residual_linking_difference = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
     structure.residual_twist = ((2*pi*k) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
+}
+
+double Rloop_dynamic_model::compute_residual_lk_dynamic(){
+    //structure.residual_linking_difference = ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
+    //structure.residual_twist = ((2*pi*k) / (4*pow(pi,2)*C+k*structure.position.get_length()-structure.external_length)) * (alpha+structure.position.get_length()*A);
+    return ((4*pow(pi,2)*C) / (4*pow(pi,2)*C+k*n_rloop_bases)) * (alpha_total+n_rloop_bases*A);
+
 }
 
 void Rloop_dynamic_model::ground_state_residuals(double &twist, double &writhe){
@@ -273,4 +382,54 @@ long double Rloop_dynamic_model::ground_state_factor(){
 
 long double Rloop_dynamic_model::ground_state_energy(){
     return ((k*pow(alpha, 2)) / 2) - a;
+}
+
+
+//automatically generated getters and setters (Refactor later) vvv
+int Rloop_dynamic_model::getWindow_size() const {
+    return window_size;
+}
+
+void Rloop_dynamic_model::setWindow_size(int window_size) {
+    Rloop_dynamic_model::window_size = window_size;
+}
+
+int Rloop_dynamic_model::getN_rloops() const {
+    return n_rloops;
+}
+
+void Rloop_dynamic_model::setN_rloops(int n_rloops) {
+    Rloop_dynamic_model::n_rloops = n_rloops;
+}
+
+int Rloop_dynamic_model::getInitiation_step_size() const {
+    return initiation_step_size;
+}
+
+void Rloop_dynamic_model::setInitiation_step_size(int initiation_step_size) {
+    Rloop_dynamic_model::initiation_step_size = initiation_step_size;
+}
+
+int Rloop_dynamic_model::getElongation_step_size() const {
+    return elongation_step_size;
+}
+
+void Rloop_dynamic_model::setElongation_step_size(int elongation_step_size) {
+    Rloop_dynamic_model::elongation_step_size = elongation_step_size;
+}
+
+double Rloop_dynamic_model::getTranscriptional_superhelicity() const {
+    return transcriptional_superhelicity;
+}
+
+void Rloop_dynamic_model::setTranscriptional_superhelicity(double transcriptional_superhelicity) {
+    Rloop_dynamic_model::transcriptional_superhelicity = transcriptional_superhelicity;
+}
+
+int Rloop_dynamic_model::getN_rloop_bases() const {
+    return n_rloop_bases;
+}
+
+void Rloop_dynamic_model::setN_rloop_bases(int n_rloop_bases) {
+    Rloop_dynamic_model::n_rloop_bases = n_rloop_bases;
 }
