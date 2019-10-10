@@ -111,7 +111,7 @@ vector<Peak> Simulation::import_external_structures(string importfilename, Model
     return temp;
 }
 
-void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal){
+void Simulation::compute_signal_bpprobs(Gene &gene, vector<double> *&signal) {
     signal = new vector<double>(gene.get_length(), 0.0);
     //compute the r-loop involvement probability for each base
     //for each structure in the gene
@@ -862,16 +862,11 @@ void Simulation::simulation_D() {
         }
         srand(seed);
         cout << "Seed: " << seed << endl;
-        int n_simulations = 1000; // placeholder
         dynamic_model->sequence = this_gene->getSequence();
-        dynamic_model->setWindow_size(15);
-        dynamic_model->setInitiation_step_size(1);
-        dynamic_model->setElongation_step_size(5);
-        dynamic_model->setTranscriptional_superhelicity(-0.01); //placeholder
         dynamic_model->ambient_linking_difference = static_cast<Rloop_dynamic_model *>(models[0])->getAlpha();
 
         //run simulation n_times
-        for (int i = 0; i < n_simulations; i++) {
+        for (int i = 0; i < dynamic_model->getNSimulations(); i++) {
             cout << "Simulation " << i + 1 << ' ' << endl;
             outfile << "Simulation " << i + 1 << ' ' << endl;
             //set initial position and window

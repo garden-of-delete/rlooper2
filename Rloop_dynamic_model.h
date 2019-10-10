@@ -56,6 +56,7 @@ protected:
     int n_rloop_bases;
 
 protected:
+    int n_simulations;
     int current_pos; //The INDEX value of the current "polymerase" position. current_pos + 1 is the base-pair number.
     int window_size;
     int initiation_step_size;
@@ -85,6 +86,7 @@ public:
     double getAlpha() const;
     double getAlphaTotal() const;
     int getCurrentPos() const;
+    int getNSimulations() const;
     void setN(int N);
     void setA(double A);
     void setC(double C);
@@ -96,6 +98,7 @@ public:
     void setAlpha(double alpha);
     void setAlphaTotal(double alpha);
     void set_bp_energy_override(double energy);
+    void setNSimulations(int n);
 
     //member functions
     void reset_model();

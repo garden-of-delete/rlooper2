@@ -41,6 +41,12 @@ Rloop_dynamic_model::Rloop_dynamic_model() {
     homopolymer_override = false;
     unconstrained = false;
     override_energy = 0.0;
+
+    //dynamic model specific parameters
+    window_size = 15;
+    initiation_step_size = 1;
+    elongation_step_size = 5;
+    transcriptional_superhelicity = -0.01;
 }
 
 int Rloop_dynamic_model::getN() const {
@@ -77,6 +83,10 @@ double Rloop_dynamic_model::getAlphaTotal() const {
 
 int Rloop_dynamic_model::getCurrentPos() const {
     return current_pos;
+}
+
+int Rloop_dynamic_model::getNSimulations() const {
+    return n_simulations;
 }
 
 void Rloop_dynamic_model::setN(int N) {
@@ -126,6 +136,10 @@ double Rloop_dynamic_model::getT() const {
 void Rloop_dynamic_model::setT(double T) {
     Rloop_dynamic_model::T = T;
     k = (2200 * 0.0019858775 * T) / N;
+}
+
+void Rloop_dynamic_model::setNSimulations(int n){
+    n_simulations = n;
 }
 
 int Rloop_dynamic_model::find_distance(vector<char>& sequence, const std::vector<char>::iterator &start, const std::vector<char>::iterator &stop, Structure& structure){

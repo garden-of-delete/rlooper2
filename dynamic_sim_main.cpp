@@ -78,6 +78,27 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[i], "--localaverageenergy")) {
             sim.set_average_g(true);
         }
+        //dynamic model specific parameters
+        else if (!strcmp(argv[i], "--seed")) {
+            sim.set_seed(atoi(argv[i+1]));
+            i++;
+        }
+        else if (!strcmp(argv[i], "--initwindow")) {
+            model.setInitiation_step_size(atoi(argv[i+1]));
+            i++;
+        }
+        else if (!strcmp(argv[i], "--elongwindow")) {
+            model.setElongation_step_size(atoi(argv[i+1]));
+            i++;
+        }
+        else if (!strcmp(argv[i], "--nsims")) {
+            model.setNSimulations(atoi(argv[i+1]));
+            i++;
+        }
+        else if (!strcmp(argv[i], "--transcriptionalsh")) {
+            model.setTranscriptional_superhelicity(atof(argv[i+1]));
+            i++;
+        }
         else{
             cout << "Unrecognized command line option: " << argv[i] << endl;
             exit(1);
